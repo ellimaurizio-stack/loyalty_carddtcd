@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Disclaimer extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'loyalty_program_id',
+        'text',
+        'is_mandatory',
+        'pdf_path',
+    ];
+
+    protected $casts = [
+        'is_mandatory' => 'boolean',
+    ];
+
+    public function loyaltyProgram()
+    {
+        return $this->belongsTo(LoyaltyProgram::class);
+    }
+}

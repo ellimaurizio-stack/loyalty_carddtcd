@@ -1,0 +1,112 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\LoyaltyProgram;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
+
+class SettingsController extends Controller
+{
+    public function edit()
+    {
+        $program = LoyaltyProgram::with('disclaimers')->firstOrCreate(
+            ['is_active' => true],
+            [
+                'name' => 'Default Program',
+                'purchases_threshold' => 2,
+                'form_fields' => [],
+                'otp_channel' => 'phone',
+                'otp_channel_label' => 'Phone Number',
+                'text_color' => '#000000',
+                'translations' => [
+                    'page_title' => 'Join our Loyalty Program!',
+                    'intro_text' => 'We noticed you shop here often. Join our loyalty program to earn rewards!',
+                    'button_text' => 'Send OTP Code'
+                ]
+            ]
+        );
+
+        return Inertia::render('Admin/Settings/Edit', [
+            'program' => $program
+        ]);
+    }
+
+    public function update(Request $request)
+    {
+        $program = LoyaltyProgram::firstOrFail();
+
+        // form_fields is a JSON string from FormData
+        $formFields = json_decode($request->input('form_fields', '[]'), true) ?? [];
+
+        // Update basic program settings
+        $program->update([
+            'background_color' => $request->input('background_color', '#ffffff'),
+            'primary_color' => $request->input('primary_color', '#3f51b5'),
+            'form_fields' => $formFields,
+            'otp_channel' => $request->input('otp_channel', 'phone'),
+            'otp_channel_label' => $request->input('otp_channel_label', 'Phone Number'),
+            'text_color' => $request->input('text_color', '#000000'),
+            'translations' => json_decode($request->input('translations', '{}'), true) ?? []
+        ]);
+
+        // Handle Logo
+        if ($request->hasFile('logo')) {
+            if ($program->logo_path) {
+                Storage::disk('public')->delete($program->logo_path);
+            }
+            $program->logo_path = $request->file('logo')->store('logos', 'public');
+            $program->save();
+        }
+
+        // Handle Background Image
+        if ($request->hasFile('background_image')) {
+            if ($program->background_image_path) {
+                Storage::disk('public')->delete($program->background_image_path);
+            }
+            $program->background_image_path = $request->file('background_image')->store('backgrounds', 'public');
+            $program->save();
+        }
+
+        // Handle Disclaimers
+        // We will receive disclaimers as JSON to know which to keep/delete/create
+        $disclaimersData = json_decode($request->input('disclaimers', '[]'), true) ?? [];
+        
+        $existingDisclaimerIds = $program->disclaimers->pluck('id')->toArray();
+        $receivedDisclaimerIds = collect($disclaimersData)->pluck('id')->filter()->toArray();
+
+        // Delete removed disclaimers
+        $toDelete = array_diff($existingDisclaimerIds, $receivedDisclaimerIds);
+        foreach ($program->disclaimers->whereIn('id', $toDelete) as $disclaimer) {
+            if ($disclaimer->pdf_path) {
+                Storage::disk('public')->delete($disclaimer->pdf_path);
+            }
+            $disclaimer->delete();
+        }
+
+        // Update or create disclaimers
+        foreach ($disclaimersData as $index => $disclaimerData) {
+            $disclaimer = $program->disclaimers()->updateOrCreate(
+                ['id' => $disclaimerData['id'] ?? null],
+                [
+                    'text' => $disclaimerData['text'] ?? '',
+                    'is_mandatory' => filter_var($disclaimerData['is_mandatory'] ?? true, FILTER_VALIDATE_BOOLEAN)
+                ]
+            );
+
+            // Handle PDF upload for this disclaimer
+            $pdfFileKey = "disclaimer_pdf_{$index}";
+            if ($request->hasFile($pdfFileKey)) {
+                if ($disclaimer->pdf_path) {
+                    Storage::disk('public')->delete($disclaimer->pdf_path);
+                }
+                $disclaimer->pdf_path = $request->file($pdfFileKey)->store('disclaimers', 'public');
+                $disclaimer->save();
+            }
+        }
+
+        return redirect()->back()->with('success', 'Settings updated successfully.');
+    }
+}
