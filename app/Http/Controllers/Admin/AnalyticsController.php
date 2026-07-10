@@ -11,43 +11,7 @@ class AnalyticsController extends Controller
 {
     public function index()
     {
-        // 1. Customer Segments Summary
-        $segmentsSummary = DB::table('customer_segments')
-            ->select('segment_name', DB::raw('count(*) as count'), DB::raw('avg(monetary) as avg_monetary'))
-            ->groupBy('segment_name')
-            ->get();
-
-        // 2. Product Associations (Market Basket Rules)
-        $associations = DB::table('product_associations')
-            ->orderByDesc('lift')
-            ->limit(15)
-            ->get();
-
-        // Map them to arrays from json
-        $associations = $associations->map(function($rule) {
-            return [
-                'antecedents' => json_decode($rule->antecedents),
-                'consequents' => json_decode($rule->consequents),
-                'support' => round($rule->support, 3),
-                'confidence' => round($rule->confidence, 3),
-                'lift' => round($rule->lift, 2)
-            ];
-        });
-
-        // 3. Top Products Overall (for reference)
-        $topProducts = DB::table('purchases')
-            ->select(DB::raw('json_extract(value, "$.name") as product_name'), DB::raw('count(*) as times_bought'))
-            ->join(DB::raw('json_each(products)'), 'purchases.id', '=', 'purchases.id')
-            ->groupBy('product_name')
-            ->orderByDesc('times_bought')
-            ->limit(5)
-            ->get();
-
-        return Inertia::render('Admin/Analytics/Index', [
-            'segmentsSummary' => $segmentsSummary,
-            'associations' => $associations,
-            'topProducts' => $topProducts
-        ]);
+        return Inertia::render('Admin/Analytics/Index');
     }
 
     public function generate(Request $request, \App\Services\AdvancedAnalyticsService $analyticsService)

@@ -14,7 +14,7 @@ class PromotionalRuleController extends Controller
     {
         $program = LoyaltyProgram::where('is_active', true)->firstOrFail();
         $rules = $program->rules()->orderBy('priority', 'desc')->get();
-        $products = \App\Models\Product::orderBy('name')->get(['id', 'ean', 'name', 'price']);
+        $products = \App\Models\Product::orderBy('name')->get(['id', 'ean_code', 'name', 'price']);
 
         return Inertia::render('Admin/Rules/Index', [
             'rules' => $rules,
