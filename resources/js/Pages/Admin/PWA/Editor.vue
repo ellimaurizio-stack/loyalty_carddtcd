@@ -8,14 +8,20 @@ const props = defineProps({
 });
 
 const form = useForm({
-    app_name: props.settings.app_name || 'Loyalty App',
-    primary_color: props.settings.primary_color || '#4f46e5',
-    background_color: props.settings.background_color || '#f3f4f6',
-    text_color: props.settings.text_color || '#111827',
+    app_name: props.settings?.app_name || 'Loyalty App',
+    primary_color: props.settings?.primary_color || '#4f46e5',
+    background_color: props.settings?.background_color || '#f3f4f6',
+    text_color: props.settings?.text_color || '#111827',
     logo: null,
+    registration_fields: props.settings?.registration_fields || {
+        name: { enabled: true, required: true },
+        phone: { enabled: false, required: false },
+        dob: { enabled: false, required: false }
+    },
+    privacy_policy: props.settings?.privacy_policy || 'Accetto i termini e le condizioni d\'uso.',
 });
 
-const logoPreview = ref(props.settings.logo_path ? `/storage/${props.settings.logo_path}` : null);
+const logoPreview = ref(props.settings?.logo_path ? `/storage/${props.settings.logo_path}` : null);
 
 const handleLogoChange = (e) => {
     const file = e.target.files[0];
@@ -90,7 +96,69 @@ const submit = () => {
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-end">
+                        <hr class="my-6">
+                        <h3 class="text-lg font-bold mb-4">Campi di Registrazione (PWA & POS)</h3>
+                        
+                        <div class="space-y-4">
+                            <!-- Name Field -->
+                            <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
+                                <div>
+                                    <span class="font-medium text-gray-700">Nome e Cognome</span>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" v-model="form.registration_fields.name.enabled" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <span class="ml-2 text-sm text-gray-600">Mostra</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" v-model="form.registration_fields.name.required" :disabled="!form.registration_fields.name.enabled" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 disabled:opacity-50">
+                                        <span class="ml-2 text-sm text-gray-600">Obbligatorio</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Phone Field -->
+                            <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
+                                <div>
+                                    <span class="font-medium text-gray-700">Telefono</span>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" v-model="form.registration_fields.phone.enabled" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <span class="ml-2 text-sm text-gray-600">Mostra</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" v-model="form.registration_fields.phone.required" :disabled="!form.registration_fields.phone.enabled" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 disabled:opacity-50">
+                                        <span class="ml-2 text-sm text-gray-600">Obbligatorio</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- DOB Field -->
+                            <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
+                                <div>
+                                    <span class="font-medium text-gray-700">Data di Nascita</span>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <label class="flex items-center">
+                                        <input type="checkbox" v-model="form.registration_fields.dob.enabled" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                        <span class="ml-2 text-sm text-gray-600">Mostra</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="checkbox" v-model="form.registration_fields.dob.required" :disabled="!form.registration_fields.dob.enabled" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 disabled:opacity-50">
+                                        <span class="ml-2 text-sm text-gray-600">Obbligatorio</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            <label class="block text-sm font-medium text-gray-700">Testo per Privacy Policy</label>
+                            <textarea v-model="form.privacy_policy" rows="3" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" placeholder="Testo da accettare..."></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Gli utenti dovranno accettare la privacy con una spunta prima di registrarsi.</p>
+                        </div>
+
+                        <div class="flex items-center justify-end mt-6">
                             <button type="submit" :disabled="form.processing" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                 Salva Impostazioni
                             </button>

@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import QrcodeVue from 'qrcode.vue';
 
 const props = defineProps({
@@ -8,6 +8,32 @@ const props = defineProps({
     pwaSettings: Object,
     rewards: Array,
 });
+
+const deferredPrompt = ref(null);
+const showInstallBtn = ref(false);
+
+onMounted(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        deferredPrompt.value = e;
+        // Update UI notify the user they can install the PWA
+        showInstallBtn.value = true;
+    });
+});
+
+const installPwa = async () => {
+    if (deferredPrompt.value) {
+        deferredPrompt.value.prompt();
+        const { outcome } = await deferredPrompt.value.userChoice;
+        if (outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+            showInstallBtn.value = false;
+        }
+        deferredPrompt.value = null;
+    }
+};
 
 const bg = computed(() => props.pwaSettings?.background_color || '#f3f4f6');
 const primary = computed(() => props.pwaSettings?.primary_color || '#4f46e5');
@@ -53,10 +79,18 @@ const qrValue = computed(() => props.customer.card_identifier);
                         <qrcode-vue :value="qrValue" :size="70" level="M" />
                     </div>
                 </div>
-                <div class="mt-8 flex justify-between items-end relative z-10">
+            <div class="mt-8 flex justify-between items-end relative z-10">
                     <div class="text-sm font-mono tracking-widest opacity-90">{{ customer.card_identifier }}</div>
                 </div>
             </div>
+            
+            <!-- Install App Button -->
+            <button v-if="showInstallBtn" @click="installPwa" class="mt-6 w-full h-14 rounded-2xl flex items-center justify-center space-x-3 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform" :style="{ backgroundColor: primary }">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>Installa App sul Telefono</span>
+            </button>
             
             <!-- Add to Wallet Buttons (Opzione C - Predisposizione) -->
             <div class="mt-6 space-y-3">

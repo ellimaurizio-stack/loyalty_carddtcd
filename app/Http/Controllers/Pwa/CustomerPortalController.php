@@ -54,32 +54,75 @@ class CustomerPortalController extends Controller
 
     public function register(Request $request)
     {
-        // First check if customer exists by email (if they registered at POS)
-        $request->validate([
+        $settings = PwaSetting::firstOrCreate([]);
+        $fields = $settings->registration_fields ?? [
+            'name' => ['enabled' => true, 'required' => true],
+            'phone' => ['enabled' => false, 'required' => false],
+            'dob' => ['enabled' => false, 'required' => false],
+        ];
+
+        $rules = [
             'email' => 'required|email',
-            'password' => 'required|confirmed|min:6'
-        ]);
+            'password' => 'required|confirmed|min:6',
+        ];
+
+        if ($fields['name']['enabled']) {
+            $rules['name'] = $fields['name']['required'] ? 'required|string' : 'nullable|string';
+        }
+        if ($fields['phone']['enabled']) {
+            $rules['phone'] = $fields['phone']['required'] ? 'required|string' : 'nullable|string';
+        }
+        if ($fields['dob']['enabled']) {
+            $rules['dob'] = $fields['dob']['required'] ? 'required|date' : 'nullable|date';
+        }
+        if (!empty($settings->privacy_policy)) {
+            $rules['privacy'] = 'accepted';
+        }
+
+        $request->validate($rules);
 
         $customer = Customer::where('email', $request->email)->first();
 
         if ($customer) {
             // Already a customer but maybe without a password
+            if ($customer->password) {
+                return back()->withErrors([
+                    'email' => 'Questa email è già registrata. Per favore, effettua l\'accesso.',
+                ]);
+            }
             $customer->password = Hash::make($request->password);
+            
+            if ($fields['name']['enabled'] && $request->filled('name')) $customer->name = $request->name;
+            if ($fields['phone']['enabled'] && $request->filled('phone')) $customer->phone = $request->phone;
+            if ($fields['dob']['enabled'] && $request->filled('dob')) $customer->dob = $request->dob;
+            if (!empty($settings->privacy_policy)) $customer->privacy_accepted_at = now();
+            
             $customer->save();
         } else {
             // Create brand new customer
-            // Need a unique card identifier
             $cardIdentifier = 'APP' . time() . rand(1000, 9999);
             
             $customer = Customer::create([
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'card_identifier' => $cardIdentifier,
-                'name' => $request->name ?? '',
+                'name' => $fields['name']['enabled'] ? ($request->name ?? '') : '',
+                'phone' => $fields['phone']['enabled'] ? $request->phone : null,
+                'dob' => $fields['dob']['enabled'] ? $request->dob : null,
+                'privacy_accepted_at' => !empty($settings->privacy_policy) ? now() : null,
             ]);
         }
 
         Auth::guard('customer')->login($customer);
+        
+        // If it's POS mode, return JSON so the WebView can capture it
+        if ($request->has('pos_mode')) {
+            return response()->json([
+                'status' => 'success',
+                'customer' => $customer
+            ]);
+        }
+        
         return redirect()->route('pwa.dashboard');
     }
 

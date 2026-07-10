@@ -17,9 +17,12 @@ class Customer extends Authenticatable
         'surname',
         'email',
         'phone',
+        'dob',
+        'privacy_accepted_at',
         'loyalty_points',
         'cashback_balance',
         'customer_data',
+        'password',
     ];
 
     protected $casts = [

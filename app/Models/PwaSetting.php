@@ -15,5 +15,11 @@ class PwaSetting extends Model
         'background_color',
         'text_color',
         'logo_path',
+        'registration_fields',
+        'privacy_policy',
+    ];
+
+    protected $casts = [
+        'registration_fields' => 'array',
     ];
 }
