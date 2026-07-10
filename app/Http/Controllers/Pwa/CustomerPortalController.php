@@ -44,11 +44,12 @@ class CustomerPortalController extends Controller
         ]);
     }
 
-    public function showRegister()
+    public function showRegister(Request $request)
     {
         $settings = PwaSetting::firstOrCreate([]);
         return Inertia::render('PWA/Auth/Register', [
             'pwaSettings' => $settings,
+            'card_identifier' => $request->query('card_identifier'),
         ]);
     }
 
@@ -99,18 +100,37 @@ class CustomerPortalController extends Controller
             
             $customer->save();
         } else {
-            // Create brand new customer
-            $cardIdentifier = 'APP' . time() . rand(1000, 9999);
+            // If pos_mode and we received a card_identifier, we should see if a customer with that card exists
+            // because the POS might have created an empty customer with just the card_identifier
+            $cardIdentifier = $request->input('card_identifier');
             
-            $customer = Customer::create([
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'card_identifier' => $cardIdentifier,
-                'name' => $fields['name']['enabled'] ? ($request->name ?? '') : '',
-                'phone' => $fields['phone']['enabled'] ? $request->phone : null,
-                'dob' => $fields['dob']['enabled'] ? $request->dob : null,
-                'privacy_accepted_at' => !empty($settings->privacy_policy) ? now() : null,
-            ]);
+            if ($cardIdentifier) {
+                $customer = Customer::where('card_identifier', $cardIdentifier)->first();
+            }
+
+            if ($customer) {
+                // Update the existing NFC card customer
+                $customer->email = $request->email;
+                $customer->password = Hash::make($request->password);
+                if ($fields['name']['enabled'] && $request->filled('name')) $customer->name = $request->name;
+                if ($fields['phone']['enabled'] && $request->filled('phone')) $customer->phone = $request->phone;
+                if ($fields['dob']['enabled'] && $request->filled('dob')) $customer->dob = $request->dob;
+                if (!empty($settings->privacy_policy)) $customer->privacy_accepted_at = now();
+                $customer->save();
+            } else {
+                // Create brand new customer
+                $cardIdentifier = $cardIdentifier ?? ('APP' . time() . rand(1000, 9999));
+                
+                $customer = Customer::create([
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'name' => $fields['name']['enabled'] ? $request->name : null,
+                    'phone' => $fields['phone']['enabled'] ? $request->phone : null,
+                    'dob' => $fields['dob']['enabled'] ? $request->dob : null,
+                    'card_identifier' => $cardIdentifier,
+                    'privacy_accepted_at' => $request->has('privacy') ? now() : null,
+                ]);
+            }
         }
 
         Auth::guard('customer')->login($customer);

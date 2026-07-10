@@ -5,6 +5,7 @@ import { computed, onMounted } from 'vue';
 const props = defineProps({
     pwaSettings: Object,
     errors: Object,
+    card_identifier: String,
 });
 
 const isPosMode = computed(() => {
@@ -20,6 +21,7 @@ const form = useForm({
     password_confirmation: '',
     privacy: false,
     pos_mode: false,
+    card_identifier: props.card_identifier || '',
 });
 
 onMounted(() => {
