@@ -103,3 +103,8 @@ Route::get('/manifest.json', function () {
         ]
     ]);
 });
+
+Route::get('/debug/delete-customer/{card}', function ($card) {
+    $deleted = \App\Models\Customer::where('card_identifier', 'like', "%$card")->delete();
+    return "Deleted $deleted customer(s).";
+});
