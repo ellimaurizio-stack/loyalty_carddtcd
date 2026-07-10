@@ -42,6 +42,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // App POS Settings
     Route::get('/app-settings', [App\Http\Controllers\Admin\AppSettingController::class, 'edit'])->name('app-settings.edit');
     Route::post('/app-settings', [App\Http\Controllers\Admin\AppSettingController::class, 'update'])->name('app-settings.update');
+
+    // PWA Settings
+    Route::get('/pwa-settings', [App\Http\Controllers\Admin\PwaSettingsController::class, 'edit'])->name('pwa-settings.edit');
+    Route::post('/pwa-settings', [App\Http\Controllers\Admin\PwaSettingsController::class, 'update'])->name('admin.pwa.update');
 });
 
 Route::middleware('auth')->group(function () {
@@ -55,3 +59,47 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// PWA Frontend Routes
+Route::get('/pwa/login', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'showLogin'])->name('pwa.login');
+Route::post('/pwa/login', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'login'])->name('pwa.login.post');
+Route::get('/pwa/register', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'showRegister'])->name('pwa.register');
+Route::post('/pwa/register', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'register'])->name('pwa.register.post');
+
+Route::middleware('auth:customer')->group(function () {
+    Route::get('/pwa/dashboard', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'dashboard'])->name('pwa.dashboard');
+    Route::post('/pwa/logout', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'logout'])->name('pwa.logout');
+});
+
+Route::get('/manifest.json', function () {
+    $settings = \App\Models\PwaSetting::firstOrCreate([], [
+        'app_name' => 'Loyalty App',
+        'primary_color' => '#4f46e5',
+        'background_color' => '#f3f4f6',
+    ]);
+    
+    $logoUrl = $settings->logo_path ? asset('storage/' . $settings->logo_path) : '/pwa-icon.svg';
+
+    return response()->json([
+        'name' => $settings->app_name,
+        'short_name' => $settings->app_name,
+        'start_url' => '/pwa/dashboard',
+        'display' => 'standalone',
+        'background_color' => $settings->background_color,
+        'theme_color' => $settings->primary_color,
+        'icons' => [
+            [
+                'src' => $logoUrl,
+                'sizes' => '192x192',
+                'type' => 'image/png',
+                'purpose' => 'any maskable'
+            ],
+            [
+                'src' => $logoUrl,
+                'sizes' => '512x512',
+                'type' => 'image/png',
+                'purpose' => 'any maskable'
+            ]
+        ]
+    ]);
+});

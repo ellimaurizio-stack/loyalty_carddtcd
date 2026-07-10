@@ -73,7 +73,13 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('app-settings.edit')"
                                     :active="route().current('app-settings.edit')"
                                 >
-                                    POS Layout
+                                    App Cassa
+                                </NavLink>
+                                <NavLink
+                                    :href="route('pwa-settings.edit')"
+                                    :active="route().current('pwa-settings.edit')"
+                                >
+                                    App Clienti (PWA)
                                 </NavLink>
                             </div>
                         </div>
@@ -216,7 +222,13 @@ const showingNavigationDropdown = ref(false);
                             :href="route('app-settings.edit')"
                             :active="route().current('app-settings.edit')"
                         >
-                            POS Layout
+                            App Cassa
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('pwa-settings.edit')"
+                            :active="route().current('pwa-settings.edit')"
+                        >
+                            App Clienti (PWA)
                         </ResponsiveNavLink>
                     </div>
 
