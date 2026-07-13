@@ -194,6 +194,11 @@ class AdvancedAnalyticsService
             }
         }
 
+        usort($rules, fn($a, $b) => $b['lift'] <=> $a['lift']);
+
+        return $rules;
+    }
+
     public function answerQuery($productName, $questionType)
     {
         // Otteniamo il report completo senza filtri stretti per avere tutto il contesto
