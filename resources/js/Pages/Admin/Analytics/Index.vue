@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { Bubble } from 'vue-chartjs';
@@ -64,6 +64,36 @@ const originalReport = ref(null);
 const loading = ref(false);
 const showWarning = ref(false);
 const warningMessage = ref('');
+
+const page = usePage();
+const availableProducts = computed(() => page.props.products || []);
+
+const assistantForm = ref({
+    product_name: '',
+    question_type: ''
+});
+const assistantAnswer = ref('');
+const askingAssistant = ref(false);
+
+const askAssistant = async () => {
+    if (!assistantForm.value.product_name || !assistantForm.value.question_type) {
+        alert('Seleziona sia il prodotto che il tipo di domanda.');
+        return;
+    }
+    
+    askingAssistant.value = true;
+    assistantAnswer.value = '';
+    
+    try {
+        const response = await axios.post(route('admin.analytics.ask'), assistantForm.value);
+        assistantAnswer.value = response.data.answer;
+    } catch (error) {
+        console.error(error);
+        alert('Errore durante la comunicazione con l\'assistente.');
+    } finally {
+        askingAssistant.value = false;
+    }
+};
 
 // Computed filtered basket per i grafici pre-conferma e la lista
 const filteredBasket = computed(() => {
@@ -217,10 +247,11 @@ const cancelSliderChange = () => {
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
 
                 <!-- Tabs Navigation -->
-                <div class="flex space-x-4 border-b border-gray-200 pb-2">
-                    <button @click="activeTab = 'config'" :class="{'border-b-2 border-indigo-600 font-bold': activeTab === 'config'}" class="pb-2 text-gray-700">1. Configurazione</button>
-                    <button @click="activeTab = 'glossary'" :class="{'border-b-2 border-indigo-600 font-bold': activeTab === 'glossary'}" class="pb-2 text-gray-700">Glossario Tecnico</button>
-                    <button @click="activeTab = 'report'" :disabled="!originalReport" :class="{'border-b-2 border-indigo-600 font-bold': activeTab === 'report', 'opacity-50 cursor-not-allowed': !originalReport}" class="pb-2 text-gray-700">2. Report Strategico</button>
+                <div class="flex space-x-4 border-b border-gray-200 pb-2 overflow-x-auto">
+                    <button @click="activeTab = 'config'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-700': activeTab === 'config'}" class="pb-2 px-1 text-gray-700 whitespace-nowrap">1. Dati & Setup</button>
+                    <button @click="activeTab = 'report'" :disabled="!originalReport" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-700': activeTab === 'report', 'opacity-50 cursor-not-allowed': !originalReport}" class="pb-2 px-1 text-gray-700 whitespace-nowrap">2. Report Strategico</button>
+                    <button @click="activeTab = 'assistant'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-700': activeTab === 'assistant'}" class="pb-2 px-1 text-gray-700 whitespace-nowrap">3. Assistente Analitico</button>
+                    <button @click="activeTab = 'glossary'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-700': activeTab === 'glossary'}" class="pb-2 px-1 text-gray-700 whitespace-nowrap">Glossario Tecnico</button>
                 </div>
 
                 <!-- TAB 1: CONFIGURATION -->
@@ -277,6 +308,51 @@ const cancelSliderChange = () => {
                         <button @click="generateReport" :disabled="loading" class="bg-indigo-600 text-white px-6 py-2 rounded font-bold hover:bg-indigo-700">
                             {{ loading ? 'Elaborazione in corso...' : 'Genera Strategia' }}
                         </button>
+                    </div>
+                </div>
+
+                <!-- TAB 3: ASSISTANT -->
+                <div v-show="activeTab === 'assistant'" class="bg-white p-6 rounded-lg shadow space-y-6">
+                    <h3 class="text-xl font-bold text-gray-800 border-b pb-2">Assistente alle Vendite</h3>
+                    <p class="text-sm text-gray-600">Poni domande specifiche su un prodotto e lascia che il sistema calcoli le migliori strategie basandosi sui dati di vendita.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg border">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Seleziona Prodotto</label>
+                            <select v-model="assistantForm.product_name" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="" disabled>Scegli un prodotto...</option>
+                                <option v-for="prod in availableProducts" :key="prod" :value="prod">{{ prod }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Cosa vuoi sapere?</label>
+                            <select v-model="assistantForm.question_type" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="" disabled>Scegli la domanda...</option>
+                                <option value="complementary">Quali sono i prodotti complementari?</option>
+                                <option value="substitute">Quali sono i prodotti sostituti (stessa categoria)?</option>
+                                <option value="bundle">Quali sono i prodotti vendibili in bundle?</option>
+                                <option value="promo">Quale tipo di promo adottare? (Sconto, Cashback, ecc.)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end mt-4">
+                        <button @click="askAssistant" :disabled="askingAssistant || !assistantForm.product_name || !assistantForm.question_type" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center shadow">
+                            <span v-if="askingAssistant">Calcolo in corso...</span>
+                            <span v-else>Interroga l'Assistente</span>
+                        </button>
+                    </div>
+
+                    <!-- Risposta dell'Assistente -->
+                    <div v-if="assistantAnswer" class="mt-8 border-t pt-6">
+                        <h4 class="font-bold text-lg text-indigo-800 flex items-center mb-4">
+                            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            Risposta del Sistema
+                        </h4>
+                        <div class="bg-indigo-50 border-l-4 border-indigo-600 p-6 rounded-r-lg text-gray-800 whitespace-pre-line leading-relaxed shadow-sm">
+                            <vue-markdown v-if="false" /> <!-- Placeholder if we want to use markdown later, for now whitespace-pre-line handles basic newlines -->
+                            <div v-html="assistantAnswer.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')"></div>
+                        </div>
                     </div>
                 </div>
 

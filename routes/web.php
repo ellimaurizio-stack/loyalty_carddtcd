@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/analytics/generate', [App\Http\Controllers\Admin\AnalyticsController::class, 'generate'])->name('admin.analytics.generate');
     Route::get('/analytics/template', [App\Http\Controllers\Admin\AnalyticsController::class, 'downloadTemplate'])->name('admin.analytics.template');
     Route::post('/analytics/import', [App\Http\Controllers\Admin\AnalyticsController::class, 'importCsv'])->name('admin.analytics.import');
+    Route::post('/analytics/ask', [App\Http\Controllers\Admin\AnalyticsController::class, 'askAssistant'])->name('admin.analytics.ask');
 });
 
 require __DIR__.'/auth.php';

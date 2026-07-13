@@ -11,7 +11,10 @@ class AnalyticsController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Admin/Analytics/Index');
+        $products = \App\Models\Product::pluck('name');
+        return Inertia::render('Admin/Analytics/Index', [
+            'products' => $products
+        ]);
     }
 
     public function generate(Request $request, \App\Services\AdvancedAnalyticsService $analyticsService)
@@ -31,6 +34,18 @@ class AnalyticsController extends Controller
         );
 
         return response()->json($report);
+    }
+
+    public function askAssistant(Request $request, \App\Services\AdvancedAnalyticsService $analyticsService)
+    {
+        $validated = $request->validate([
+            'product_name' => 'required|string',
+            'question_type' => 'required|in:complementary,substitute,bundle,promo'
+        ]);
+
+        $answer = $analyticsService->answerQuery($validated['product_name'], $validated['question_type']);
+
+        return response()->json(['answer' => $answer]);
     }
 
     public function downloadTemplate()
