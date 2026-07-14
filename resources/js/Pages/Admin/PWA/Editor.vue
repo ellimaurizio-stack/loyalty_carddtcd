@@ -14,12 +14,6 @@ const form = useForm({
     text_color: props.settings?.text_color || '#111827',
     logo: null,
     background_image: null,
-    registration_fields: {
-        name: { enabled: props.settings?.registration_fields?.name?.enabled ?? true, required: props.settings?.registration_fields?.name?.required ?? true },
-        phone: { enabled: props.settings?.registration_fields?.phone?.enabled ?? false, required: props.settings?.registration_fields?.phone?.required ?? false },
-        dob: { enabled: props.settings?.registration_fields?.dob?.enabled ?? false, required: props.settings?.registration_fields?.dob?.required ?? false }
-    },
-    privacy_policy: props.settings?.privacy_policy || 'Accetto i termini e le condizioni d\'uso.',
 });
 
 const logoPreview = ref(props.settings?.logo_path ? `/storage/${props.settings.logo_path}` : null);
@@ -114,68 +108,6 @@ const submit = () => {
                                     <input v-model="form.text_color" type="text" class="ml-2 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                                 </div>
                             </div>
-                        </div>
-
-                        <hr class="my-6">
-                        <h3 class="text-lg font-bold mb-4">Campi di Registrazione (PWA & POS)</h3>
-                        
-                        <div class="space-y-4">
-                            <!-- Name Field -->
-                            <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
-                                <div>
-                                    <span class="font-medium text-gray-700">Nome e Cognome</span>
-                                </div>
-                                <div class="flex items-center space-x-4">
-                                    <label class="flex items-center">
-                                        <input type="checkbox" v-model="form.registration_fields.name.enabled" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                                        <span class="ml-2 text-sm text-gray-600">Mostra</span>
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" v-model="form.registration_fields.name.required" :disabled="!form.registration_fields.name.enabled" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 disabled:opacity-50">
-                                        <span class="ml-2 text-sm text-gray-600">Obbligatorio</span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <!-- Phone Field -->
-                            <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
-                                <div>
-                                    <span class="font-medium text-gray-700">Telefono</span>
-                                </div>
-                                <div class="flex items-center space-x-4">
-                                    <label class="flex items-center">
-                                        <input type="checkbox" v-model="form.registration_fields.phone.enabled" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                                        <span class="ml-2 text-sm text-gray-600">Mostra</span>
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" v-model="form.registration_fields.phone.required" :disabled="!form.registration_fields.phone.enabled" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 disabled:opacity-50">
-                                        <span class="ml-2 text-sm text-gray-600">Obbligatorio</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- DOB Field -->
-                            <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
-                                <div>
-                                    <span class="font-medium text-gray-700">Data di Nascita</span>
-                                </div>
-                                <div class="flex items-center space-x-4">
-                                    <label class="flex items-center">
-                                        <input type="checkbox" v-model="form.registration_fields.dob.enabled" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
-                                        <span class="ml-2 text-sm text-gray-600">Mostra</span>
-                                    </label>
-                                    <label class="flex items-center">
-                                        <input type="checkbox" v-model="form.registration_fields.dob.required" :disabled="!form.registration_fields.dob.enabled" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 disabled:opacity-50">
-                                        <span class="ml-2 text-sm text-gray-600">Obbligatorio</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-6">
-                            <label class="block text-sm font-medium text-gray-700">Testo per Privacy Policy</label>
-                            <textarea v-model="form.privacy_policy" rows="3" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" placeholder="Testo da accettare..."></textarea>
-                            <p class="text-xs text-gray-500 mt-1">Gli utenti dovranno accettare la privacy con una spunta prima di registrarsi.</p>
                         </div>
 
                         <div class="flex items-center justify-end mt-6">

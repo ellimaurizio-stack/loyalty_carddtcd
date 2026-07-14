@@ -47,61 +47,97 @@ class CustomerPortalController extends Controller
     public function showRegister(Request $request)
     {
         $settings = PwaSetting::firstOrCreate([]);
+        $program = \App\Models\LoyaltyProgram::with('disclaimers')->first();
+        
         return Inertia::render('PWA/Auth/Register', [
             'pwaSettings' => $settings,
             'card_identifier' => $request->query('card_identifier'),
+            'formFields' => $program ? $program->form_fields : [],
+            'disclaimers' => $program ? $program->disclaimers : [],
         ]);
     }
 
     public function register(Request $request)
     {
-        $settings = PwaSetting::firstOrCreate([]);
-        $fields = $settings->registration_fields ?? [
-            'name' => ['enabled' => true, 'required' => true],
-            'phone' => ['enabled' => false, 'required' => false],
-            'dob' => ['enabled' => false, 'required' => false],
-        ];
+        $program = \App\Models\LoyaltyProgram::with('disclaimers')->first();
+        $formFields = $program ? ($program->form_fields ?? []) : [];
+        $disclaimers = $program ? ($program->disclaimers ?? collect()) : collect();
 
         $rules = [
             'email' => 'required|email',
             'password' => 'required|confirmed|min:6',
         ];
 
-        if ($fields['name']['enabled']) {
-            $rules['name'] = $fields['name']['required'] ? 'required|string' : 'nullable|string';
+        // Dynamic fields validation
+        foreach ($formFields as $field) {
+            // Note: email is already handled above, but if they redefined it, this will override or append rules
+            if ($field['name'] === 'email' || $field['name'] === 'password') continue;
+            
+            $fieldRules = [];
+            if (!empty($field['required'])) {
+                $fieldRules[] = 'required';
+            } else {
+                $fieldRules[] = 'nullable';
+            }
+
+            if ($field['type'] === 'email') $fieldRules[] = 'email';
+            if ($field['type'] === 'number') $fieldRules[] = 'numeric';
+            if ($field['type'] === 'date') $fieldRules[] = 'date';
+            
+            $rules[$field['name']] = implode('|', $fieldRules);
         }
-        if ($fields['phone']['enabled']) {
-            $rules['phone'] = $fields['phone']['required'] ? 'required|string' : 'nullable|string';
-        }
-        if ($fields['dob']['enabled']) {
-            $rules['dob'] = $fields['dob']['required'] ? 'required|date' : 'nullable|date';
-        }
-        if (!empty($settings->privacy_policy)) {
-            $rules['privacy'] = 'accepted';
+
+        // Disclaimers validation
+        foreach ($disclaimers as $disclaimer) {
+            if ($disclaimer->is_mandatory) {
+                $rules['disclaimer_' . $disclaimer->id] = 'accepted';
+            }
         }
 
         $request->validate($rules);
 
+        // Separate static columns from extra JSON data
+        $staticColumns = ['name', 'surname', 'phone', 'dob'];
+        $staticData = [];
+        $extraData = [];
+
+        foreach ($formFields as $field) {
+            if ($field['name'] === 'email' || $field['name'] === 'password') continue;
+            
+            if (in_array($field['name'], $staticColumns)) {
+                $staticData[$field['name']] = $request->input($field['name']);
+            } else {
+                $extraData[$field['name']] = $request->input($field['name']);
+            }
+        }
+
+        // Collect accepted disclaimers
+        $acceptedDisclaimers = [];
+        foreach ($disclaimers as $disclaimer) {
+            if ($request->has('disclaimer_' . $disclaimer->id)) {
+                $acceptedDisclaimers[] = $disclaimer->id;
+            }
+        }
+
         $customer = Customer::where('email', $request->email)->first();
 
         if ($customer) {
-            // Already a customer but maybe without a password
             if ($customer->password) {
                 return back()->withErrors([
                     'email' => 'Questa email è già registrata. Per favore, effettua l\'accesso.',
                 ]);
             }
             $customer->password = Hash::make($request->password);
-            
-            if ($fields['name']['enabled'] && $request->filled('name')) $customer->name = $request->name;
-            if ($fields['phone']['enabled'] && $request->filled('phone')) $customer->phone = $request->phone;
-            if ($fields['dob']['enabled'] && $request->filled('dob')) $customer->dob = $request->dob;
-            if (!empty($settings->privacy_policy)) $customer->privacy_accepted_at = now();
-            
+            foreach ($staticData as $key => $value) {
+                if ($value !== null) $customer->{$key} = $value;
+            }
+            $customer->extra_data = array_merge((array)$customer->extra_data, $extraData);
+            $customer->accepted_disclaimers = array_unique(array_merge((array)$customer->accepted_disclaimers, $acceptedDisclaimers));
+            if (!empty($acceptedDisclaimers)) {
+                $customer->privacy_accepted_at = now();
+            }
             $customer->save();
         } else {
-            // If pos_mode and we received a card_identifier, we should see if a customer with that card exists
-            // because the POS might have created an empty customer with just the card_identifier
             $cardIdentifier = $request->input('card_identifier');
             
             if ($cardIdentifier) {
@@ -109,27 +145,30 @@ class CustomerPortalController extends Controller
             }
 
             if ($customer) {
-                // Update the existing NFC card customer
                 $customer->email = $request->email;
                 $customer->password = Hash::make($request->password);
-                if ($fields['name']['enabled'] && $request->filled('name')) $customer->name = $request->name;
-                if ($fields['phone']['enabled'] && $request->filled('phone')) $customer->phone = $request->phone;
-                if ($fields['dob']['enabled'] && $request->filled('dob')) $customer->dob = $request->dob;
-                if (!empty($settings->privacy_policy)) $customer->privacy_accepted_at = now();
+                foreach ($staticData as $key => $value) {
+                    if ($value !== null) $customer->{$key} = $value;
+                }
+                $customer->extra_data = array_merge((array)$customer->extra_data, $extraData);
+                $customer->accepted_disclaimers = array_unique(array_merge((array)$customer->accepted_disclaimers, $acceptedDisclaimers));
+                if (!empty($acceptedDisclaimers)) {
+                    $customer->privacy_accepted_at = now();
+                }
                 $customer->save();
             } else {
-                // Create brand new customer
                 $cardIdentifier = $cardIdentifier ?? ('APP' . time() . rand(1000, 9999));
                 
-                $customer = Customer::create([
+                $customerData = array_merge([
                     'email' => $request->email,
                     'password' => Hash::make($request->password),
-                    'name' => $fields['name']['enabled'] ? $request->name : null,
-                    'phone' => $fields['phone']['enabled'] ? $request->phone : null,
-                    'dob' => $fields['dob']['enabled'] ? $request->dob : null,
                     'card_identifier' => $cardIdentifier,
-                    'privacy_accepted_at' => $request->has('privacy') ? now() : null,
-                ]);
+                    'extra_data' => $extraData,
+                    'accepted_disclaimers' => $acceptedDisclaimers,
+                    'privacy_accepted_at' => !empty($acceptedDisclaimers) ? now() : null,
+                ], $staticData);
+                
+                $customer = Customer::create($customerData);
             }
         }
 

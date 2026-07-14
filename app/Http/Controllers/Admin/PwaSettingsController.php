@@ -38,8 +38,6 @@ class PwaSettingsController extends Controller
             'text_color' => 'required|string',
             'logo' => 'nullable|image|max:2048',
             'background_image' => 'nullable|image|max:4096',
-            'registration_fields' => 'nullable|array',
-            'privacy_policy' => 'nullable|string',
         ]);
 
         $settings = PwaSetting::first();
@@ -65,8 +63,6 @@ class PwaSettingsController extends Controller
             'primary_color' => $validated['primary_color'],
             'background_color' => $validated['background_color'],
             'text_color' => $validated['text_color'],
-            'registration_fields' => $validated['registration_fields'] ?? $settings->registration_fields,
-            'privacy_policy' => $validated['privacy_policy'] ?? $settings->privacy_policy,
         ]);
 
         return redirect()->back()->with('success', 'Impostazioni aggiornate con successo.');

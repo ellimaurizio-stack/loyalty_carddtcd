@@ -22,11 +22,15 @@ class Customer extends Authenticatable
         'loyalty_points',
         'cashback_balance',
         'customer_data',
+        'extra_data',
+        'accepted_disclaimers',
         'password',
     ];
 
     protected $casts = [
         'customer_data' => 'array',
+        'extra_data' => 'array',
+        'accepted_disclaimers' => 'array',
         'cashback_balance' => 'decimal:2',
     ];
 
