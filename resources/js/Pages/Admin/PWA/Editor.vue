@@ -14,10 +14,10 @@ const form = useForm({
     text_color: props.settings?.text_color || '#111827',
     logo: null,
     background_image: null,
-    registration_fields: props.settings?.registration_fields || {
-        name: { enabled: true, required: true },
-        phone: { enabled: false, required: false },
-        dob: { enabled: false, required: false }
+    registration_fields: {
+        name: { enabled: props.settings?.registration_fields?.name?.enabled ?? true, required: props.settings?.registration_fields?.name?.required ?? true },
+        phone: { enabled: props.settings?.registration_fields?.phone?.enabled ?? false, required: props.settings?.registration_fields?.phone?.required ?? false },
+        dob: { enabled: props.settings?.registration_fields?.dob?.enabled ?? false, required: props.settings?.registration_fields?.dob?.required ?? false }
     },
     privacy_policy: props.settings?.privacy_policy || 'Accetto i termini e le condizioni d\'uso.',
 });

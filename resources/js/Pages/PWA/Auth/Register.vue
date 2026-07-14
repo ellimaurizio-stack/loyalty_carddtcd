@@ -49,10 +49,13 @@ const text = computed(() => props.pwaSettings?.text_color || '#111827');
 const logo = computed(() => props.pwaSettings?.logo_path ? `/storage/${props.pwaSettings.logo_path}` : null);
 const appName = computed(() => props.pwaSettings?.app_name || 'Loyalty App');
 
-const fields = computed(() => props.pwaSettings?.registration_fields || {
-    name: { enabled: true, required: true },
-    phone: { enabled: false, required: false },
-    dob: { enabled: false, required: false },
+const fields = computed(() => {
+    const rf = props.pwaSettings?.registration_fields;
+    return {
+        name: { enabled: rf?.name?.enabled ?? true, required: rf?.name?.required ?? true },
+        phone: { enabled: rf?.phone?.enabled ?? false, required: rf?.phone?.required ?? false },
+        dob: { enabled: rf?.dob?.enabled ?? false, required: rf?.dob?.required ?? false }
+    };
 });
 
 const privacyPolicy = computed(() => props.pwaSettings?.privacy_policy || '');
