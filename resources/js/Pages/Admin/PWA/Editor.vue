@@ -12,6 +12,8 @@ const form = useForm({
     primary_color: props.settings?.primary_color || '#4f46e5',
     background_color: props.settings?.background_color || '#f3f4f6',
     text_color: props.settings?.text_color || '#111827',
+    card_color: props.settings?.card_color || '#4f46e5',
+    card_text_color: props.settings?.card_text_color || '#ffffff',
     logo: null,
     background_image: null,
 });
@@ -79,11 +81,31 @@ const submit = () => {
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Colore Primario</label>
-                                <div class="flex items-center mt-1">
-                                    <input v-model="form.primary_color" type="color" class="h-10 w-10 border-0 rounded p-0 cursor-pointer">
-                                    <input v-model="form.primary_color" type="text" class="ml-2 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                <div class="mt-1 flex items-center space-x-2">
+                                    <input type="color" v-model="form.primary_color" class="h-8 w-8 border border-gray-300 rounded cursor-pointer">
+                                    <input type="text" v-model="form.primary_color" class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                                 </div>
+                                <p class="text-xs text-gray-500 mt-1">Colore dei bottoni e accenti.</p>
                             </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Colore Carta Fedeltà</label>
+                                <div class="mt-1 flex items-center space-x-2">
+                                    <input type="color" v-model="form.card_color" class="h-8 w-8 border border-gray-300 rounded cursor-pointer">
+                                    <input type="text" v-model="form.card_color" class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Colore di sfondo della carta.</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Testo Carta Fedeltà</label>
+                                <div class="mt-1 flex items-center space-x-2">
+                                    <input type="color" v-model="form.card_text_color" class="h-8 w-8 border border-gray-300 rounded cursor-pointer">
+                                    <input type="text" v-model="form.card_text_color" class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Colore dei testi sulla carta.</p>
+                            </div>
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Sfondo App</label>
                                 <div class="flex items-center mt-1">
@@ -143,7 +165,7 @@ const submit = () => {
                             </div>
 
                             <!-- Mock Card -->
-                            <div class="w-full h-40 rounded-2xl p-4 flex flex-col justify-between shadow-lg relative overflow-hidden" :style="{ backgroundColor: form.primary_color, color: '#ffffff' }">
+                            <div class="w-full h-40 rounded-2xl p-4 flex flex-col justify-between shadow-lg relative overflow-hidden" :style="{ backgroundColor: form.card_color, color: form.card_text_color }">
                                 <div class="font-bold tracking-widest text-sm opacity-80">LOYALTY CARD</div>
                                 <div class="text-3xl font-black mt-2">1,250 Punti</div>
                                 <div class="mt-4 flex justify-between items-end">

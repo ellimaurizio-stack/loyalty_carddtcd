@@ -36,6 +36,8 @@ class PwaSettingsController extends Controller
             'primary_color' => 'required|string',
             'background_color' => 'required|string',
             'text_color' => 'required|string',
+            'card_color' => 'nullable|string',
+            'card_text_color' => 'nullable|string',
             'logo' => 'nullable|image|max:2048',
             'background_image' => 'nullable|image|max:4096',
         ]);
@@ -63,6 +65,8 @@ class PwaSettingsController extends Controller
             'primary_color' => $validated['primary_color'],
             'background_color' => $validated['background_color'],
             'text_color' => $validated['text_color'],
+            'card_color' => $validated['card_color'] ?? '#4f46e5',
+            'card_text_color' => $validated['card_text_color'] ?? '#ffffff',
         ]);
 
         return redirect()->back()->with('success', 'Impostazioni aggiornate con successo.');

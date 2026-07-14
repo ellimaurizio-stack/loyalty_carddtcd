@@ -41,6 +41,8 @@ const primary = computed(() => props.pwaSettings?.primary_color || '#4f46e5');
 const text = computed(() => props.pwaSettings?.text_color || '#111827');
 const logo = computed(() => props.pwaSettings?.logo_path ? `/storage/${props.pwaSettings.logo_path}` : null);
 const name = computed(() => props.pwaSettings?.app_name || 'Loyalty App');
+const cardColor = computed(() => props.pwaSettings?.card_color || '#4f46e5');
+const cardTextColor = computed(() => props.pwaSettings?.card_text_color || '#ffffff');
 
 const qrValue = computed(() => props.customer.card_identifier);
 </script>
@@ -66,7 +68,7 @@ const qrValue = computed(() => props.customer.card_identifier);
             <p class="opacity-70 mb-6 text-sm">Ecco il tuo riepilogo fedeltà</p>
             
             <!-- Virtual Card -->
-            <div class="w-full rounded-3xl p-6 shadow-xl relative overflow-hidden" :style="{ backgroundColor: primary, color: '#ffffff' }">
+            <div class="w-full rounded-3xl p-6 shadow-xl relative overflow-hidden" :style="{ backgroundColor: cardColor, color: cardTextColor }">
                 <!-- Decorative circle -->
                 <div class="absolute -bottom-16 -right-16 w-48 h-48 rounded-full bg-white opacity-10"></div>
                 
