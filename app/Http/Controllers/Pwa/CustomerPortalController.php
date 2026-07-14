@@ -10,10 +10,10 @@ use Inertia\Inertia;
 use App\Models\Customer;
 use App\Models\PwaSetting;
 use App\Models\PromotionalRule;
+use App\Models\Store;
 
 class CustomerPortalController extends Controller
 {
-    public function showLogin()
     public function showLogin(Store $store)
     {
         return inertia('PWA/Auth/Login', [
