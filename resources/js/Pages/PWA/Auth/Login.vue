@@ -17,6 +17,7 @@ const submit = () => {
 };
 
 const bg = computed(() => props.pwaSettings?.background_color || '#f3f4f6');
+const bgImage = computed(() => props.pwaSettings?.background_image_path ? `url(/storage/${props.pwaSettings.background_image_path})` : 'none');
 const primary = computed(() => props.pwaSettings?.primary_color || '#4f46e5');
 const text = computed(() => props.pwaSettings?.text_color || '#111827');
 const logo = computed(() => props.pwaSettings?.logo_path ? `/storage/${props.pwaSettings.logo_path}` : null);
@@ -25,7 +26,7 @@ const name = computed(() => props.pwaSettings?.app_name || 'Loyalty App');
 
 <template>
     <Head title="Accedi" />
-    <div class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8" :style="{ backgroundColor: bg, color: text }">
+    <div class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-cover bg-center bg-no-repeat" :style="{ backgroundColor: bg, backgroundImage: bgImage, color: text }">
         <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
             <img v-if="logo" :src="logo" alt="Logo" class="mx-auto h-24 w-auto rounded-full object-cover shadow-lg mb-4" />
             <div v-else class="mx-auto h-24 w-24 rounded-full bg-gray-200 shadow-lg mb-4 flex items-center justify-center">

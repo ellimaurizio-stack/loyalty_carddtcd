@@ -13,6 +13,7 @@ const form = useForm({
     background_color: props.settings?.background_color || '#f3f4f6',
     text_color: props.settings?.text_color || '#111827',
     logo: null,
+    background_image: null,
     registration_fields: props.settings?.registration_fields || {
         name: { enabled: true, required: true },
         phone: { enabled: false, required: false },
@@ -22,12 +23,21 @@ const form = useForm({
 });
 
 const logoPreview = ref(props.settings?.logo_path ? `/storage/${props.settings.logo_path}` : null);
+const bgPreview = ref(props.settings?.background_image_path ? `/storage/${props.settings.background_image_path}` : null);
 
 const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
         form.logo = file;
         logoPreview.value = URL.createObjectURL(file);
+    }
+};
+
+const handleBgChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        form.background_image = file;
+        bgPreview.value = URL.createObjectURL(file);
     }
 };
 
@@ -86,6 +96,16 @@ const submit = () => {
                                     <input v-model="form.background_color" type="color" class="h-10 w-10 border-0 rounded p-0 cursor-pointer">
                                     <input v-model="form.background_color" type="text" class="ml-2 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                                 </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Immagine Sfondo</label>
+                                <input @change="handleBgChange" type="file" accept="image/*" class="mt-1 block w-full text-sm text-gray-500
+                                    file:mr-2 file:py-1 file:px-2
+                                    file:rounded file:border-0
+                                    file:text-xs file:font-semibold
+                                    file:bg-indigo-50 file:text-indigo-700
+                                    hover:file:bg-indigo-100
+                                    "/>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Colore Testo</label>
@@ -168,7 +188,8 @@ const submit = () => {
 
                 <!-- Live Preview Mockup -->
                 <div class="w-full md:w-80 flex justify-center">
-                    <div class="mockup-phone relative border-8 border-gray-800 rounded-[3rem] h-[600px] w-[300px] shadow-xl overflow-hidden bg-white" :style="{ backgroundColor: form.background_color }">
+                    <div class="mockup-phone relative border-8 border-gray-800 rounded-[3rem] h-[600px] w-[300px] shadow-xl overflow-hidden bg-white bg-cover bg-center" 
+                         :style="{ backgroundColor: form.background_color, backgroundImage: bgPreview ? `url(${bgPreview})` : 'none' }">
                         <!-- Top notch simulation -->
                         <div class="absolute top-0 inset-x-0 h-6 bg-gray-800 rounded-b-3xl w-40 mx-auto z-50"></div>
                         

@@ -36,6 +36,7 @@ const installPwa = async () => {
 };
 
 const bg = computed(() => props.pwaSettings?.background_color || '#f3f4f6');
+const bgImage = computed(() => props.pwaSettings?.background_image_path ? `url(/storage/${props.pwaSettings.background_image_path})` : 'none');
 const primary = computed(() => props.pwaSettings?.primary_color || '#4f46e5');
 const text = computed(() => props.pwaSettings?.text_color || '#111827');
 const logo = computed(() => props.pwaSettings?.logo_path ? `/storage/${props.pwaSettings.logo_path}` : null);
@@ -45,8 +46,8 @@ const qrValue = computed(() => props.customer.card_identifier);
 </script>
 
 <template>
-    <Head title="La mia Carta" />
-    <div class="min-h-screen pb-20" :style="{ backgroundColor: bg, color: text }">
+    <Head title="Loyalty Dashboard" />
+    <div class="min-h-screen pb-20 bg-cover bg-center bg-no-repeat" :style="{ backgroundColor: bg, backgroundImage: bgImage, color: text }">
         
         <!-- Header -->
         <div class="pt-8 px-6 flex justify-between items-center">

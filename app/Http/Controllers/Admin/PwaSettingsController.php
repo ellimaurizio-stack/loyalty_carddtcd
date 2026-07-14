@@ -37,6 +37,7 @@ class PwaSettingsController extends Controller
             'background_color' => 'required|string',
             'text_color' => 'required|string',
             'logo' => 'nullable|image|max:2048',
+            'background_image' => 'nullable|image|max:4096',
             'registration_fields' => 'nullable|array',
             'privacy_policy' => 'nullable|string',
         ]);
@@ -49,6 +50,14 @@ class PwaSettingsController extends Controller
             }
             $path = $request->file('logo')->store('pwa', 'public');
             $settings->logo_path = $path;
+        }
+
+        if ($request->hasFile('background_image')) {
+            if ($settings->background_image_path) {
+                Storage::disk('public')->delete($settings->background_image_path);
+            }
+            $bgPath = $request->file('background_image')->store('pwa/backgrounds', 'public');
+            $settings->background_image_path = $bgPath;
         }
 
         $settings->update([

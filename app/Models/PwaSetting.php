@@ -15,6 +15,7 @@ class PwaSetting extends Model
         'background_color',
         'text_color',
         'logo_path',
+        'background_image_path',
         'registration_fields',
         'privacy_policy',
     ];
