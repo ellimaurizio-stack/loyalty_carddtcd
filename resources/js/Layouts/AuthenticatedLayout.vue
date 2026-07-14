@@ -73,6 +73,13 @@ const showingNavigationDropdown = ref(false);
                                     Stores
                                 </NavLink>
                                 <NavLink
+                                    v-if="['super_admin', 'brand_manager'].includes($page.props.auth.user.role)"
+                                    :href="route('users.index')"
+                                    :active="route().current('users.*')"
+                                >
+                                    Users
+                                </NavLink>
+                                <NavLink
                                     :href="route('products.index')"
                                     :active="route().current('products.*')"
                                 >
@@ -237,6 +244,13 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('stores.*')"
                         >
                             Stores
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="['super_admin', 'brand_manager'].includes($page.props.auth.user.role)"
+                            :href="route('users.index')"
+                            :active="route().current('users.*')"
+                        >
+                            Users
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             :href="route('products.index')"

@@ -1,0 +1,208 @@
+
+ GET|HEAD / .. generated::5ludBJqgzaqPtybB
+ ⇂ web
+ GET|HEAD analytics admin.analytics › Admin\AnalyticsController@index
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ POST analytics/ask admin.analytics.ask › Admin\AnalyticsController@askAssistant
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ POST analytics/generate admin.analytics.generate › Admin\AnalyticsController@generate
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ POST analytics/import admin.analytics.import › Admin\AnalyticsController@importCsv
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ GET|HEAD analytics/template admin.analytics.template › Admin\AnalyticsController@downloadTemplate
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ GET|HEAD api/app-settings .. generated::FL6NbPAYkwLFlOmK
+ ⇂ api
+ POST api/loyalty/enroll generated::5RZsSzVI4c2QhkH5 › Api\LoyaltyController@enroll
+ ⇂ api
+ POST api/loyalty/verify generated::pvNnTC47JmcEIlHa › Api\LoyaltyController@verify
+ ⇂ api
+ GET|HEAD api/product-scan generated::vuVIqhQCJyyZcqbN › Api\ProductController@findByEan
+ ⇂ api
+ POST api/products generated::RUQwCObG4XSSZbiB › Api\ProductController@store
+ ⇂ api
+ GET|HEAD api/products/{ean} generated::Tx72hQH7HW44Wikb › Api\ProductController@findByEanOld
+ ⇂ api
+ POST api/purchases generated::N9omDJIzAUrhuFPI › Api\PurchaseController@store
+ ⇂ api
+ GET|HEAD api/settings generated::hHJEewkjux3Bxvrf › Api\SettingsController@index
+ ⇂ api
+ GET|HEAD api/user .. generated::AnnsDgpePYq0dllf
+ ⇂ api
+ ⇂ Illuminate\Auth\Middleware\Authenticate:sanctum
+ GET|HEAD app-settings app-settings.edit › Admin\AppSettingController@edit
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ POST app-settings app-settings.update › Admin\AppSettingController@update
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ GET|HEAD confirm-password password.confirm › Auth\ConfirmablePasswordController@show
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ POST confirm-password generated::iZjMtElWdHfU4LXO › Auth\ConfirmablePasswordController@store
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ GET|HEAD customers . customers.index › Admin\CustomerController@index
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ GET|HEAD customers/{customer} customers.show › Admin\CustomerController@show
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ GET|HEAD dashboard .. dashboard › DashboardController@index
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ PUT dashboard/program/{program} program.update › DashboardController@updateProgram
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ GET|HEAD debug/delete-customer/{query} .. generated::LDR6d1H347xHaSzf
+ ⇂ web
+ POST email/verification-notification verification.send › Auth\EmailVerificationNotificationController@store
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Routing\Middleware\ThrottleRequests:6,1
+ GET|HEAD forgot-password password.request › Auth\PasswordResetLinkController@create
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\RedirectIfAuthenticated
+ POST forgot-password password.email › Auth\PasswordResetLinkController@store
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\RedirectIfAuthenticated
+ GET|HEAD login .. login › Auth\AuthenticatedSessionController@create
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\RedirectIfAuthenticated
+ POST login generated::Zqtvcb8ffUmlqv8D › Auth\AuthenticatedSessionController@store
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\RedirectIfAuthenticated
+ POST logout logout › Auth\AuthenticatedSessionController@destroy
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ GET|HEAD manifest.json .. generated::2CEpwPskW3YACuSh
+ ⇂ web
+ PUT password .. password.update › Auth\PasswordController@update
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ GET|HEAD products .. products.index › Admin\ProductController@index
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ POST products .. products.store › Admin\ProductController@store
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ GET|HEAD products/csv-template products.csv-template › Admin\ProductController@downloadTemplate
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ POST products/import products.import › Admin\ProductController@importCsv
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ POST products/import-zip products.import-zip › Admin\ProductController@importZip
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ PUT|PATCH products/{product} products.update › Admin\ProductController@update
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ DELETE products/{product} products.destroy › Admin\ProductController@destroy
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ PATCH products/{product}/stock products.update-stock › Admin\ProductController@updateStock
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ GET|HEAD profile .. profile.edit › ProfileController@edit
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ PATCH profile .. profile.update › ProfileController@update
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ DELETE profile .. profile.destroy › ProfileController@destroy
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ GET|HEAD promotional-rules promotional-rules.index › Admin\PromotionalRuleController@index
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ POST promotional-rules promotional-rules.store › Admin\PromotionalRuleController@store
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ PUT|PATCH promotional-rules/{promotional_rule} promotional-rules.update › Admin\PromotionalRuleController@update
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ DELETE promotional-rules/{promotional_rule} promotional-rules.destroy › Admin\PromotionalRuleController@destroy
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ GET|HEAD pwa-settings pwa-settings.edit › Admin\PwaSettingsController@edit
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ POST pwa-settings admin.pwa.update › Admin\PwaSettingsController@update
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ GET|HEAD pwa/dashboard pwa.dashboard › Pwa\CustomerPortalController@dashboard
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate:customer
+ GET|HEAD pwa/login pwa.login › Pwa\CustomerPortalController@showLogin
+ ⇂ web
+ POST pwa/login pwa.login.post › Pwa\CustomerPortalController@login
+ ⇂ web
+ POST pwa/logout pwa.logout › Pwa\CustomerPortalController@logout
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate:customer
+ GET|HEAD pwa/register pwa.register › Pwa\CustomerPortalController@showRegister
+ ⇂ web
+ POST pwa/register pwa.register.post › Pwa\CustomerPortalController@register
+ ⇂ web
+ GET|HEAD register .. register › Auth\RegisteredUserController@create
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\RedirectIfAuthenticated
+ POST register generated::cYn1wd5NwzpRh4hv › Auth\RegisteredUserController@store
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\RedirectIfAuthenticated
+ POST reset-password password.store › Auth\NewPasswordController@store
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\RedirectIfAuthenticated
+ GET|HEAD reset-password/{token} password.reset › Auth\NewPasswordController@create
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\RedirectIfAuthenticated
+ GET|HEAD sanctum/csrf-cookie sanctum.csrf-cookie › Laravel\Sanctum › CsrfCookieController@show
+ ⇂ web
+ GET|HEAD settings .. settings.edit › Admin\SettingsController@edit
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ POST settings . settings.update › Admin\SettingsController@update
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Auth\Middleware\EnsureEmailIsVerified
+ GET|HEAD storage/{path} .. storage.local
+ PUT storage/{path} .. storage.local.upload
+ GET|HEAD up .. generated::Xxc2oVZpXSLOrITD
+ GET|HEAD verify-email verification.notice › Auth\EmailVerificationPromptController
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ GET|HEAD verify-email/{id}/{hash} verification.verify › Auth\VerifyEmailController
+ ⇂ web
+ ⇂ Illuminate\Auth\Middleware\Authenticate
+ ⇂ Illuminate\Routing\Middleware\ValidateSignature
+ ⇂ Illuminate\Routing\Middleware\ThrottleRequests:6,1
+
+ Showing [67] routes
+

@@ -32,9 +32,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('brands', \App\Http\Controllers\Admin\BrandController::class);
     });
 
-    // Stores (Super Admin and Brand Manager)
+    // Stores and Users (Super Admin and Brand Manager)
     Route::middleware('role:super_admin,brand_manager')->group(function () {
         Route::resource('stores', \App\Http\Controllers\Admin\StoreController::class);
+        Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->except(['create', 'show', 'edit']);
     });
 
     // Products
