@@ -14,80 +14,77 @@ use App\Models\PromotionalRule;
 class CustomerPortalController extends Controller
 {
     public function showLogin()
+    public function showLogin(Store $store)
     {
-        $settings = PwaSetting::firstOrCreate([], [
-            'app_name' => 'Loyalty App',
-            'primary_color' => '#4f46e5',
-            'background_color' => '#f3f4f6',
-            'text_color' => '#111827',
-        ]);
-
-        return Inertia::render('PWA/Auth/Login', [
-            'pwaSettings' => $settings,
+        return inertia('PWA/Auth/Login', [
+            'store' => $store,
+            'pwaSettings' => PwaSetting::where('brand_id', $store->brand_id)->first(),
         ]);
     }
 
-    public function login(Request $request)
+    public function login(Request $request, Store $store)
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        if (Auth::guard('customer')->attempt($credentials)) {
-            $request->session()->regenerate();
-            return redirect()->intended('/pwa/dashboard');
+        $customer = Customer::where('email', $request->email)->first();
+
+        if ($customer && Hash::check($request->password, $customer->password)) {
+            Auth::guard('customer')->login($customer);
+            return redirect()->route('pwa.dashboard', ['store' => $store->slug]);
         }
 
         return back()->withErrors([
-            'email' => 'Le credenziali non sono corrette.',
+            'email' => 'Le credenziali fornite non sono corrette.',
         ]);
     }
 
-    public function showRegister(Request $request)
+    public function showRegister(Store $store)
     {
-        $settings = PwaSetting::firstOrCreate([]);
-        $program = \App\Models\LoyaltyProgram::with('disclaimers')->first();
-        
-        return Inertia::render('PWA/Auth/Register', [
-            'pwaSettings' => $settings,
-            'card_identifier' => $request->query('card_identifier'),
-            'formFields' => $program ? $program->form_fields : [],
-            'disclaimers' => $program ? $program->disclaimers : [],
+        // Load loyalty program configuration for this brand
+        $loyaltyProgram = LoyaltyProgram::where('brand_id', $store->brand_id)->first();
+        // Disclaimers for this brand
+        $disclaimers = Disclaimer::where('brand_id', $store->brand_id)->where('is_active', true)->get();
+
+        return inertia('PWA/Auth/Register', [
+            'store' => $store,
+            'loyaltyProgram' => $loyaltyProgram,
+            'disclaimers' => $disclaimers,
+            'pwaSettings' => PwaSetting::where('brand_id', $store->brand_id)->first(),
         ]);
     }
 
-    public function register(Request $request)
+    public function register(Request $request, Store $store)
     {
-        $program = \App\Models\LoyaltyProgram::with('disclaimers')->first();
+        $program = \App\Models\LoyaltyProgram::where('brand_id', $store->brand_id)->with('disclaimers')->first();
         $formFields = $program ? ($program->form_fields ?? []) : [];
-        $disclaimers = $program ? ($program->disclaimers ?? collect()) : collect();
+        $disclaimers = $program ? ($program->disclaimers ?? []) : [];
 
+        // Validate basic fields
         $rules = [
-            'email' => 'required|email',
-            'password' => 'required|confirmed|min:6',
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:customers'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ];
 
-        // Dynamic fields validation
+        // Add dynamic validation rules based on formFields
         foreach ($formFields as $field) {
-            // Note: email is already handled above, but if they redefined it, this will override or append rules
             if ($field['name'] === 'email' || $field['name'] === 'password') continue;
             
             $fieldRules = [];
-            if (!empty($field['required'])) {
+            if ($field['required']) {
                 $fieldRules[] = 'required';
             } else {
                 $fieldRules[] = 'nullable';
             }
-
             if ($field['type'] === 'email') $fieldRules[] = 'email';
-            if ($field['type'] === 'number') $fieldRules[] = 'numeric';
             if ($field['type'] === 'date') $fieldRules[] = 'date';
             
-            $rules[$field['name']] = implode('|', $fieldRules);
+            $rules[$field['name']] = $fieldRules;
         }
 
-        // Disclaimers validation
+        // Add validation for disclaimers
         foreach ($disclaimers as $disclaimer) {
             if ($disclaimer->is_mandatory) {
                 $rules['disclaimer_' . $disclaimer->id] = 'accepted';
@@ -145,6 +142,12 @@ class CustomerPortalController extends Controller
             }
 
             if ($customer) {
+                if ($customer->password) {
+                     return back()->withErrors([
+                        'card_identifier' => 'Questa tessera è già associata ad un account completo.',
+                    ]);
+                }
+                
                 $customer->email = $request->email;
                 $customer->password = Hash::make($request->password);
                 foreach ($staticData as $key => $value) {
@@ -157,18 +160,16 @@ class CustomerPortalController extends Controller
                 }
                 $customer->save();
             } else {
-                $cardIdentifier = $cardIdentifier ?? ('APP' . time() . rand(1000, 9999));
-                
-                $customerData = array_merge([
+                $customer = Customer::create(array_merge([
                     'email' => $request->email,
                     'password' => Hash::make($request->password),
-                    'card_identifier' => $cardIdentifier,
+                    'card_identifier' => 'APP' . time() . rand(1000, 9999),
                     'extra_data' => $extraData,
                     'accepted_disclaimers' => $acceptedDisclaimers,
                     'privacy_accepted_at' => !empty($acceptedDisclaimers) ? now() : null,
-                ], $staticData);
-                
-                $customer = Customer::create($customerData);
+                    'brand_id' => $store->brand_id,
+                    'registration_store_id' => $store->id,
+                ], $staticData));
             }
         }
 
@@ -182,28 +183,40 @@ class CustomerPortalController extends Controller
             ]);
         }
         
-        return redirect()->route('pwa.dashboard');
+        return redirect()->route('pwa.dashboard', ['store' => $store->slug]);
     }
 
-    public function dashboard(Request $request)
+    public function dashboard(Store $store)
     {
         $customer = Auth::guard('customer')->user();
-        $settings = PwaSetting::firstOrCreate([]);
         
-        $rewards = PromotionalRule::where('is_active', true)->get();
-
-        return Inertia::render('PWA/Dashboard', [
+        $pwaSettings = PwaSetting::where('brand_id', $store->brand_id)->first();
+        $loyaltyProgram = LoyaltyProgram::where('brand_id', $store->brand_id)->first();
+        $rewards = \App\Models\PromotionalRule::where('brand_id', $store->brand_id)->where('is_active', true)->get();
+        
+        // Pass the loyalty values safely
+        $points = $customer->loyalty_points ?? 0;
+        $maxPoints = $loyaltyProgram ? $loyaltyProgram->max_points : 1000;
+        
+        return inertia('PWA/Dashboard', [
+            'store' => $store,
             'customer' => $customer,
-            'pwaSettings' => $settings,
+            'loyaltyProgram' => [
+                'max_points' => $maxPoints,
+                'points_value' => $loyaltyProgram ? $loyaltyProgram->points_value : null,
+                'cashback_percentage' => $loyaltyProgram ? $loyaltyProgram->cashback_percentage : null,
+            ],
+            'pwaSettings' => $pwaSettings,
             'rewards' => $rewards,
         ]);
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request, Store $store)
     {
         Auth::guard('customer')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect()->route('pwa.login');
+
+        return redirect()->route('pwa.login', ['store' => $store->slug]);
     }
 }

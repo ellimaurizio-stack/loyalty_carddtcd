@@ -52,10 +52,25 @@ const showingNavigationDropdown = ref(false);
                                     Customers
                                 </NavLink>
                                 <NavLink
+                                    v-if="['super_admin', 'brand_manager'].includes($page.props.auth.user.role)"
                                     :href="route('promotional-rules.index')"
                                     :active="route().current('promotional-rules.*')"
                                 >
                                     Rule Engine
+                                </NavLink>
+                                <NavLink
+                                    v-if="['super_admin'].includes($page.props.auth.user.role)"
+                                    :href="route('brands.index')"
+                                    :active="route().current('brands.*')"
+                                >
+                                    Brands
+                                </NavLink>
+                                <NavLink
+                                    v-if="['super_admin', 'brand_manager'].includes($page.props.auth.user.role)"
+                                    :href="route('stores.index')"
+                                    :active="route().current('stores.*')"
+                                >
+                                    Stores
                                 </NavLink>
                                 <NavLink
                                     :href="route('products.index')"
@@ -63,24 +78,26 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Catalog
                                 </NavLink>
-                                <NavLink
-                                    :href="route('settings.edit')"
-                                    :active="route().current('settings.edit')"
-                                >
-                                    Loyalty Settings
-                                </NavLink>
-                                <NavLink
-                                    :href="route('app-settings.edit')"
-                                    :active="route().current('app-settings.edit')"
-                                >
-                                    App Cassa
-                                </NavLink>
-                                <NavLink
-                                    :href="route('pwa-settings.edit')"
-                                    :active="route().current('pwa-settings.edit')"
-                                >
-                                    App Clienti (PWA)
-                                </NavLink>
+                                <template v-if="['super_admin', 'brand_manager'].includes($page.props.auth.user.role)">
+                                    <NavLink
+                                        :href="route('settings.edit')"
+                                        :active="route().current('settings.edit')"
+                                    >
+                                        Loyalty Settings
+                                    </NavLink>
+                                    <NavLink
+                                        :href="route('app-settings.edit')"
+                                        :active="route().current('app-settings.edit')"
+                                    >
+                                        App Cassa
+                                    </NavLink>
+                                    <NavLink
+                                        :href="route('pwa-settings.edit')"
+                                        :active="route().current('pwa-settings.edit')"
+                                    >
+                                        App Clienti (PWA)
+                                    </NavLink>
+                                </template>
                             </div>
                         </div>
 
@@ -201,10 +218,25 @@ const showingNavigationDropdown = ref(false);
                             Customers
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
+                            v-if="['super_admin', 'brand_manager'].includes($page.props.auth.user.role)"
                             :href="route('promotional-rules.index')"
                             :active="route().current('promotional-rules.*')"
                         >
                             Rule Engine
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="['super_admin'].includes($page.props.auth.user.role)"
+                            :href="route('brands.index')"
+                            :active="route().current('brands.*')"
+                        >
+                            Brands
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            v-if="['super_admin', 'brand_manager'].includes($page.props.auth.user.role)"
+                            :href="route('stores.index')"
+                            :active="route().current('stores.*')"
+                        >
+                            Stores
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             :href="route('products.index')"
@@ -212,24 +244,26 @@ const showingNavigationDropdown = ref(false);
                         >
                             Catalog
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            :href="route('settings.edit')"
-                            :active="route().current('settings.edit')"
-                        >
-                            Loyalty Settings
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            :href="route('app-settings.edit')"
-                            :active="route().current('app-settings.edit')"
-                        >
-                            App Cassa
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            :href="route('pwa-settings.edit')"
-                            :active="route().current('pwa-settings.edit')"
-                        >
-                            App Clienti (PWA)
-                        </ResponsiveNavLink>
+                        <template v-if="['super_admin', 'brand_manager'].includes($page.props.auth.user.role)">
+                            <ResponsiveNavLink
+                                :href="route('settings.edit')"
+                                :active="route().current('settings.edit')"
+                            >
+                                Loyalty Settings
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                :href="route('app-settings.edit')"
+                                :active="route().current('app-settings.edit')"
+                            >
+                                App Cassa
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                :href="route('pwa-settings.edit')"
+                                :active="route().current('pwa-settings.edit')"
+                            >
+                                App Clienti (PWA)
+                            </ResponsiveNavLink>
+                        </template>
                     </div>
 
                     <!-- Responsive Settings Options -->

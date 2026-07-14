@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use App\Traits\BelongsToTenant;
 
 class Customer extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, BelongsToTenant;
 
     protected $fillable = [
         'card_identifier',
@@ -25,6 +27,8 @@ class Customer extends Authenticatable
         'extra_data',
         'accepted_disclaimers',
         'password',
+        'brand_id',
+        'registration_store_id',
     ];
 
     protected $casts = [

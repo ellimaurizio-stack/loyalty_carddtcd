@@ -4,12 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToTenant;
 
 class Disclaimer extends Model
 {
+    use BelongsToTenant;
+
     use HasFactory;
 
     protected $fillable = [
+        'brand_id',
         'loyalty_program_id',
         'text',
         'is_mandatory',

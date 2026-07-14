@@ -3,6 +3,7 @@ import { Head, useForm, Link } from '@inertiajs/vue3';
 import { computed, onMounted } from 'vue';
 
 const props = defineProps({
+    store: Object,
     pwaSettings: Object,
     errors: Object,
     card_identifier: String,
@@ -39,7 +40,7 @@ onMounted(() => {
 });
 
 const submit = () => {
-    form.post(route('pwa.register.post'), {
+    form.post(route('pwa.register.post', {store: props.store.slug}), {
         onSuccess: (page) => {
             if (isPosMode.value && page.props?.flash?.customer) {
                 if (window.FlutterChannel) {
@@ -134,7 +135,7 @@ const appName = computed(() => props.pwaSettings?.app_name || 'Loyalty App');
                 <div v-if="!isPosMode" class="mt-6 text-center">
                     <p class="text-sm opacity-80" :style="{ color: text }">
                         Hai già un account?
-                        <Link :href="route('pwa.login')" class="font-bold hover:underline" :style="{ color: primary }">
+                        <Link :href="route('pwa.login', {store: store.slug})" class="font-bold hover:underline" :style="{ color: primary }">
                             Accedi
                         </Link>
                     </p>

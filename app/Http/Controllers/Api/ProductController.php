@@ -8,11 +8,11 @@ use App\Models\Product;
 
 class ProductController extends Controller
 {
-    public function findByEan(Request $request)
+    public function findByEan(Request $request, \App\Models\Store $store)
     {
         $ean = $request->query('ean');
         \Illuminate\Support\Facades\Log::info('Scanned EAN: ' . $ean);
-        $product = Product::where('ean_code', $ean)->first();
+        $product = Product::where('brand_id', $store->brand_id)->where('ean_code', $ean)->first();
 
         if (!$product) {
             return response()->json(['error' => 'Product not found'], 404);
@@ -30,10 +30,10 @@ class ProductController extends Controller
         ]);
     }
 
-    public function findByEanOld($ean)
+    public function findByEanOld(\App\Models\Store $store, $ean)
     {
         \Illuminate\Support\Facades\Log::info('Scanned EAN (OLD APP): ' . $ean);
-        $product = Product::where('ean_code', $ean)->first();
+        $product = Product::where('brand_id', $store->brand_id)->where('ean_code', $ean)->first();
 
         if (!$product) {
             return response()->json(['error' => 'Product not found'], 404);
@@ -51,15 +51,21 @@ class ProductController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, \App\Models\Store $store)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category' => 'nullable|string|max:255',
-            'ean_code' => 'required|string|unique:products,ean_code',
+            'ean_code' => 'required|string',
             'price' => 'required|numeric|min:0',
         ]);
+        
+        // Ensure unique per brand
+        if (Product::where('brand_id', $store->brand_id)->where('ean_code', $validated['ean_code'])->exists()) {
+             return response()->json(['error' => 'The ean code has already been taken for this brand.'], 422);
+        }
 
+        $validated['brand_id'] = $store->brand_id;
         $product = Product::create($validated);
 
         return response()->json([

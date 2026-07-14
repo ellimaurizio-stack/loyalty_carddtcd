@@ -4,12 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToTenant;
 
 class PwaSetting extends Model
 {
+    use BelongsToTenant;
+
     use HasFactory;
 
     protected $fillable = [
+        'brand_id',
         'app_name',
         'primary_color',
         'background_color',

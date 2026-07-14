@@ -3,6 +3,7 @@ import { Head, useForm, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const props = defineProps({
+    store: Object,
     pwaSettings: Object,
     errors: Object,
 });
@@ -13,7 +14,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('pwa.login.post'));
+    form.post(route('pwa.login.post', {store: props.store.slug}));
 };
 
 const bg = computed(() => props.pwaSettings?.background_color || '#f3f4f6');
@@ -68,7 +69,7 @@ const name = computed(() => props.pwaSettings?.app_name || 'Loyalty App');
                 <div class="mt-6 text-center">
                     <p class="text-sm opacity-80" :style="{ color: text }">
                         Non hai un account?
-                        <Link :href="route('pwa.register')" class="font-bold hover:underline" :style="{ color: primary }">
+                        <Link :href="route('pwa.register', {store: store.slug})" class="font-bold hover:underline" :style="{ color: primary }">
                             Registrati
                         </Link>
                     </p>

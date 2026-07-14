@@ -27,11 +27,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
 
-    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
-    Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    // Brands (Only Super Admin)
+    Route::middleware('role:super_admin')->group(function () {
+        Route::resource('brands', \App\Http\Controllers\Admin\BrandController::class);
+    });
 
-    Route::resource('promotional-rules', PromotionalRuleController::class)->except(['create', 'show', 'edit']);
-    
+    // Stores (Super Admin and Brand Manager)
+    Route::middleware('role:super_admin,brand_manager')->group(function () {
+        Route::resource('stores', \App\Http\Controllers\Admin\StoreController::class);
+    });
+
     // Products
     Route::get('products/csv-template', [App\Http\Controllers\Admin\ProductController::class, 'downloadTemplate'])->name('products.csv-template');
     Route::post('products/import', [App\Http\Controllers\Admin\ProductController::class, 'importCsv'])->name('products.import');
@@ -39,13 +44,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('products/{product}/stock', [App\Http\Controllers\Admin\ProductController::class, 'updateStock'])->name('products.update-stock');
     Route::resource('products', App\Http\Controllers\Admin\ProductController::class)->except(['create', 'show', 'edit']);
 
-    // App POS Settings
-    Route::get('/app-settings', [App\Http\Controllers\Admin\AppSettingController::class, 'edit'])->name('app-settings.edit');
-    Route::post('/app-settings', [App\Http\Controllers\Admin\AppSettingController::class, 'update'])->name('app-settings.update');
-
-    // PWA Settings
-    Route::get('/pwa-settings', [App\Http\Controllers\Admin\PwaSettingsController::class, 'edit'])->name('pwa-settings.edit');
-    Route::post('/pwa-settings', [App\Http\Controllers\Admin\PwaSettingsController::class, 'update'])->name('admin.pwa.update');
+    // Settings (Super Admin and Brand Manager)
+    Route::middleware('role:super_admin,brand_manager')->group(function () {
+        Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
+        Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::resource('promotional-rules', PromotionalRuleController::class)->except(['create', 'show', 'edit']);
+        Route::get('/app-settings', [App\Http\Controllers\Admin\AppSettingController::class, 'edit'])->name('app-settings.edit');
+        Route::post('/app-settings', [App\Http\Controllers\Admin\AppSettingController::class, 'update'])->name('app-settings.update');
+        Route::get('/pwa-settings', [App\Http\Controllers\Admin\PwaSettingsController::class, 'edit'])->name('pwa-settings.edit');
+        Route::post('/pwa-settings', [App\Http\Controllers\Admin\PwaSettingsController::class, 'update'])->name('admin.pwa.update');
+    });
 });
 
 Route::middleware('auth')->group(function () {
@@ -62,14 +70,16 @@ Route::middleware('auth')->group(function () {
 require __DIR__.'/auth.php';
 
 // PWA Frontend Routes
-Route::get('/pwa/login', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'showLogin'])->name('pwa.login');
-Route::post('/pwa/login', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'login'])->name('pwa.login.post');
-Route::get('/pwa/register', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'showRegister'])->name('pwa.register');
-Route::post('/pwa/register', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'register'])->name('pwa.register.post');
+Route::prefix('/{store:slug}/pwa')->group(function () {
+    Route::get('/login', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'showLogin'])->name('pwa.login');
+    Route::post('/login', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'login'])->name('pwa.login.post');
+    Route::get('/register', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'showRegister'])->name('pwa.register');
+    Route::post('/register', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'register'])->name('pwa.register.post');
 
-Route::middleware('auth:customer')->group(function () {
-    Route::get('/pwa/dashboard', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'dashboard'])->name('pwa.dashboard');
-    Route::post('/pwa/logout', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'logout'])->name('pwa.logout');
+    Route::middleware('auth:customer')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'dashboard'])->name('pwa.dashboard');
+        Route::post('/logout', [\App\Http\Controllers\Pwa\CustomerPortalController::class, 'logout'])->name('pwa.logout');
+    });
 });
 
 Route::get('/manifest.json', function () {

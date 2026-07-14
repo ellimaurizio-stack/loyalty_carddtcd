@@ -3,10 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToTenant;
 
 class PromotionalRule extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
+        'brand_id',
         'loyalty_program_id',
         'name',
         'type',

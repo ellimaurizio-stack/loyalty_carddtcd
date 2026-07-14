@@ -12,14 +12,14 @@ use Carbon\Carbon;
 
 class LoyaltyController extends Controller
 {
-    public function enroll(Request $request, OtpProviderInterface $otpProvider)
+    public function enroll(Request $request, Store $store, OtpProviderInterface $otpProvider)
     {
-        $program = \App\Models\LoyaltyProgram::where('is_active', true)->first();
+        $program = \App\Models\LoyaltyProgram::where('brand_id', $store->brand_id)->where('is_active', true)->first();
         $otpChannel = $program ? ($program->otp_channel ?? 'phone') : 'phone';
 
         // First validate standard fields
         $rules = [
-            'card_identifier' => 'required|string|exists:customers,card_identifier',
+            'card_identifier' => 'required|string',
         ];
         
         if ($otpChannel === 'email') {
@@ -30,7 +30,16 @@ class LoyaltyController extends Controller
 
         $validated = $request->validate($rules);
 
-        $customer = Customer::where('card_identifier', $validated['card_identifier'])->firstOrFail();
+        $customer = Customer::where('card_identifier', $validated['card_identifier'])->first();
+
+        // If customer doesn't exist, create an empty one
+        if (!$customer) {
+            $customer = Customer::create([
+                'card_identifier' => $validated['card_identifier'],
+                'brand_id' => $store->brand_id,
+                'registration_store_id' => $store->id,
+            ]);
+        }
 
         $code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
 
@@ -49,9 +58,9 @@ class LoyaltyController extends Controller
         ]);
     }
 
-    public function verify(Request $request)
+    public function verify(Request $request, Store $store)
     {
-        $program = \App\Models\LoyaltyProgram::where('is_active', true)->first();
+        $program = \App\Models\LoyaltyProgram::where('brand_id', $store->brand_id)->where('is_active', true)->first();
         $otpChannel = $program ? ($program->otp_channel ?? 'phone') : 'phone';
 
         $baseRules = [

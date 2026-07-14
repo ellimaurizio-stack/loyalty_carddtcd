@@ -11,13 +11,16 @@ use App\Contracts\PaymentGatewayInterface;
 
 class PurchaseController extends Controller
 {
-    public function store(Request $request, PaymentGatewayInterface $paymentGateway)
+    public function store(Request $request, PaymentGatewayInterface $paymentGateway, \App\Models\Store $store)
     {
         $validated = $request->validate([
             'card_identifier' => 'required|string',
             'amount' => 'required|numeric|min:0.01',
             'products' => 'nullable|array',
         ]);
+
+        $validated['brand_id'] = $store->brand_id;
+        $validated['store_id'] = $store->id;
 
         if (!empty($validated['products'])) {
             $outOfStock = [];
@@ -63,17 +66,23 @@ class PurchaseController extends Controller
         }
 
         $customer = Customer::firstOrCreate(
-            ['card_identifier' => $validated['card_identifier']]
+            ['card_identifier' => $validated['card_identifier']],
+            [
+                'brand_id' => $store->brand_id,
+                'registration_store_id' => $store->id,
+            ]
         );
 
         Purchase::create([
             'customer_id' => $customer->id,
             'amount' => $validated['amount'],
             'products' => $validated['products'] ?? null,
+            'brand_id' => $store->brand_id,
+            'store_id' => $store->id,
         ]);
 
         $purchasesCount = $customer->purchases()->count();
-        $program = LoyaltyProgram::where('is_active', true)->first();
+        $program = LoyaltyProgram::where('brand_id', $store->brand_id)->where('is_active', true)->first();
 
         $promptLoyaltySignup = false;
         $unlockedRewards = [];
@@ -153,13 +162,14 @@ class PurchaseController extends Controller
                         } elseif ($rType === 'cashback') {
                             $cashbackEarned += (float) $rVal;
                         } else {
-                            // physical_prize, discount_fixed, discount_percent
                             \App\Models\CustomerReward::create([
                                 'customer_id' => $customer->id,
                                 'reward_type' => $rType,
                                 'reward_value' => (string) $rVal,
                                 'description' => $rule->name,
                                 'is_redeemed' => false,
+                                'brand_id' => $store->brand_id,
+                                'store_id' => $store->id,
                             ]);
                             $unlockedRewards[] = [
                                 'type' => $rType,

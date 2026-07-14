@@ -4,9 +4,11 @@ import { computed, ref, onMounted } from 'vue';
 import QrcodeVue from 'qrcode.vue';
 
 const props = defineProps({
+    store: Object,
     customer: Object,
     pwaSettings: Object,
     rewards: Array,
+    loyaltyProgram: Object,
 });
 
 const deferredPrompt = ref(null);
@@ -60,7 +62,7 @@ const qrValue = computed(() => props.customer.card_identifier);
                 </div>
                 <div class="font-bold text-xl">{{ name }}</div>
             </div>
-            <Link :href="route('pwa.logout')" method="post" as="button" class="text-sm opacity-60 hover:opacity-100 font-medium">Esci</Link>
+            <Link :href="route('pwa.logout', {store: store.slug})" method="post" as="button" class="text-sm opacity-60 hover:opacity-100 font-medium">Esci</Link>
         </div>
 
         <div class="px-6 mt-6">

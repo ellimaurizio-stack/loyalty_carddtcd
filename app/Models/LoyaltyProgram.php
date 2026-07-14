@@ -3,10 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToTenant;
 
 class LoyaltyProgram extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
+        'brand_id',
         'name',
         'purchases_threshold',
         'is_active',
