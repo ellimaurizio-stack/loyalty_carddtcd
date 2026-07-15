@@ -122,3 +122,7 @@ Route::get('/debug/delete-customer/{query}', function ($query) {
         ->delete();
     return "Deleted $deleted customer(s).";
 });
+
+Route::get('/debug-log', function () {
+    return response(file_get_contents(storage_path('logs/laravel.log')))->header('Content-Type', 'text/plain');
+});
