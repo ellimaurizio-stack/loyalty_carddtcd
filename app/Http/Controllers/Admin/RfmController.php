@@ -116,12 +116,24 @@ class RfmController extends Controller
         $user = auth()->user();
         $brandId = $validated['brand_id'] ?? $user->brand_id;
 
+        $loyaltyProgram = \App\Models\LoyaltyProgram::firstOrCreate(
+            ['brand_id' => $brandId],
+            [
+                'name' => 'Programma Fedeltà Principale',
+                'description' => 'Creato automaticamente',
+                'conversion_rate' => 1,
+                'points_per_currency' => 1,
+                'validity_months' => 12
+            ]
+        );
+
         $ruleData = [
             'name' => "Promo Automatica: {$validated['promo_type']} per {$validated['segment']}",
             'is_active' => true,
             'is_stackable' => true,
             'priority' => 10,
             'brand_id' => $brandId,
+            'loyalty_program_id' => $loyaltyProgram->id,
             'conditions' => [
                 'target_segment' => $validated['segment']
             ],
