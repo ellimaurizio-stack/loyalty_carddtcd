@@ -75,7 +75,7 @@ function createPromo(templateType) {
     if (selectedBrand.value) urlParams.brand_id = selectedBrand.value;
     if (selectedStore.value) urlParams.store_id = selectedStore.value;
     
-    router.get(route('admin.rules.index'), urlParams);
+    router.get(route('promotional-rules.index'), urlParams);
     closePromoModal();
 }
 </script>
