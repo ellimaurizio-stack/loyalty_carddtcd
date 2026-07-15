@@ -364,7 +364,7 @@ const cancelSliderChange = () => {
                     <hr class="my-4">
                     
                     <p class="text-indigo-800 font-bold text-lg">Le 3 Metriche del Market Basket (Apriori)</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
                         <div class="bg-gray-50 p-4 border rounded">
                             <h4 class="font-bold text-md mb-2">1. Supporto (La Popolarità)</h4>
                             <p class="text-sm">Il supporto ti dice <strong>quanto è frequente</strong> una combinazione di prodotti in assoluto su tutti gli scontrini. Ad esempio, se Latte e Biscotti si trovano in 10 scontrini su 100 totali, il supporto è del 10%.<br><br><em>Perché si modifica la soglia?</em><br>Se alzi la soglia di Supporto, escluderai i bundle "di nicchia" o rari, concentrandoti solo sulle accoppiate che vendono massicciamente ogni giorno.</p>
@@ -373,9 +373,11 @@ const cancelSliderChange = () => {
                             <h4 class="font-bold text-md mb-2">2. Confidenza (La Certezza)</h4>
                             <p class="text-sm">La confidenza ti dice <strong>quanto è forte il legame in una sola direzione</strong>. Se metto nel carrello i Biscotti, che probabilità c'è che aggiunga il Latte? Magari è dell'80% (alta confidenza). Ma non vale il viceversa!<br><br><em>Perché si modifica la soglia?</em><br>Se alzi la soglia di Confidenza, il sistema ti proporrà solo le "scommesse sicure" per le tue promozioni, scartando i bundle dove il legame psicologico del cliente è debole.</p>
                         </div>
+                        <div class="bg-gray-50 p-4 border rounded">
+                            <h4 class="font-bold text-md mb-2">3. Lift (Forza Predittiva)</h4>
+                            <p class="text-sm">Il Lift ti dice <strong>quanto è forte l'associazione rispetto al caso</strong>. Un Lift = 1 significa acquisto casuale. Un Lift = 3 significa che comprare il prodotto B è 3 volte più probabile in presenza di A rispetto al normale acquisto isolato.<br><br><em>Perché si modifica la soglia?</em><br>Se alzi la soglia di Lift, filtri solo le associazioni che sono significativamente più forti della pura coincidenza statistica.</p>
+                        </div>
                     </div>
-                    
-                    <p class="mt-4"><strong>Lift (Forza Predittiva):</strong> Un Lift = 1 significa acquisto casuale. Un Lift = 3 significa che comprare il prodotto B è 3 volte più probabile in presenza di A rispetto al normale acquisto isolato.</p>
                 </div>
 
                 <!-- TAB 2: REPORT & GLASS BOX -->
