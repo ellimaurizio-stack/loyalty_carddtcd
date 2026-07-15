@@ -9,7 +9,9 @@ trait BelongsToTenant
     protected static function bootBelongsToTenant()
     {
         static::addGlobalScope('tenant', function (Builder $builder) {
-            if (auth()->check()) {
+            // Prevent infinite loop during authentication resolution by checking hasUser()
+            // instead of check(), which would trigger another DB query for the user.
+            if (auth()->hasUser()) {
                 $user = auth()->user();
                 
                 // If user is Super Admin, they see everything
@@ -36,7 +38,7 @@ trait BelongsToTenant
         });
 
         static::creating(function ($model) {
-            if (auth()->check()) {
+            if (auth()->hasUser()) {
                 $user = auth()->user();
 
                 if ($user->role === 'brand_manager' && $user->brand_id) {
