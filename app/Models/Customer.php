@@ -29,6 +29,11 @@ class Customer extends Authenticatable
         'password',
         'brand_id',
         'registration_store_id',
+        'recency_score',
+        'frequency_score',
+        'monetary_score',
+        'rfm_segment',
+        'rfm_updated_at',
     ];
 
     protected $casts = [
