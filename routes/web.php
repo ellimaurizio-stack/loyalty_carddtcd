@@ -127,11 +127,17 @@ Route::get('/debug-log', function () {
     return response(file_get_contents(storage_path('logs/laravel.log')))->header('Content-Type', 'text/plain');
 });
 
+Route::get('/debug-seed', function () {
+    \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'SuperAdminSeeder', '--force' => true]);
+    return \Illuminate\Support\Facades\Artisan::output();
+});
+
 Route::get('/debug-db', function () {
     $admin = \App\Models\User::where('email', 'admin@loyalty.com')->first();
     return [
         'has_admin' => $admin ? true : false,
         'admin_id' => $admin->id ?? null,
         'admin_role' => $admin->role ?? null,
+        'all_users' => \App\Models\User::withoutGlobalScopes()->get(),
     ];
 });
