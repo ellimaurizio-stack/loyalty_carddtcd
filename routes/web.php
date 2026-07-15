@@ -62,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/analytics', [App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('admin.analytics');
+    Route::get('/analytics/rfm', [App\Http\Controllers\Admin\RfmController::class, 'index'])->name('admin.analytics.rfm');
     Route::post('/analytics/generate', [App\Http\Controllers\Admin\AnalyticsController::class, 'generate'])->name('admin.analytics.generate');
     Route::get('/analytics/template', [App\Http\Controllers\Admin\AnalyticsController::class, 'downloadTemplate'])->name('admin.analytics.template');
     Route::post('/analytics/import', [App\Http\Controllers\Admin\AnalyticsController::class, 'importCsv'])->name('admin.analytics.import');

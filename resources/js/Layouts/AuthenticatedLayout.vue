@@ -42,8 +42,16 @@ const showingNavigationDropdown = ref(false);
                                 <NavLink
                                     :href="route('admin.analytics')"
                                     :active="route().current('admin.analytics')"
+                                    v-if="$page.props.auth.user.role === 'super_admin' || $page.props.auth.user.role === 'brand_manager' || $page.props.auth.user.role === 'store_manager'"
                                 >
                                     Analytics
+                                </NavLink>
+                                <NavLink
+                                    :href="route('admin.analytics.rfm')"
+                                    :active="route().current('admin.analytics.rfm')"
+                                    v-if="$page.props.auth.user.role === 'super_admin' || $page.props.auth.user.role === 'brand_manager' || $page.props.auth.user.role === 'store_manager'"
+                                >
+                                    Segmentazione RFM
                                 </NavLink>
                                 <NavLink
                                     :href="route('customers.index')"
