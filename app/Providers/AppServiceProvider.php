@@ -12,6 +12,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(
+            \App\Contracts\LlmProviderInterface::class,
+            \App\Services\Llm\OpenAiConnector::class
+        );
         $this->app->bind(\App\Contracts\OtpProviderInterface::class, \App\Services\LogOtpProvider::class);
         $this->app->bind(\App\Contracts\PaymentGatewayInterface::class, \App\Services\MockPaymentGateway::class);
     }

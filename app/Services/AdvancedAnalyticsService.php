@@ -326,4 +326,29 @@ class AdvancedAnalyticsService
 
         return $answer;
     }
+
+    public function answerQueryWithAi($question)
+    {
+        $llm = app(\App\Contracts\LlmProviderInterface::class);
+
+        // Raccogliamo un estratto del contesto
+        $report = $this->generateReport(null, null, 0.01, 0.001);
+        
+        // Per non superare i limiti di token, tagliamo il basket rules alle prime 50
+        $basket = array_slice($report['basket'] ?? [], 0, 50);
+        $elasticity = array_slice($report['elasticity'] ?? [], 0, 50);
+
+        // Preleviamo la distribuzione RFM
+        $rfmQuery = \App\Models\Customer::select('rfm_segment', \DB::raw('count(*) as total'))
+                                       ->groupBy('rfm_segment')
+                                       ->get();
+        
+        $contextArray = [
+            'market_basket_rules' => $basket,
+            'price_elasticity' => $elasticity,
+            'rfm_segmentation' => $rfmQuery
+        ];
+
+        return $llm->ask($question, json_encode($contextArray));
+    }
 }

@@ -39,11 +39,20 @@ class AnalyticsController extends Controller
     public function askAssistant(Request $request, \App\Services\AdvancedAnalyticsService $analyticsService)
     {
         $validated = $request->validate([
-            'product_name' => 'required|string',
-            'question_type' => 'required|in:complementary,substitute,bundle,promo'
+            'product_name' => 'nullable|string',
+            'question_type' => 'nullable|in:complementary,substitute,bundle,promo',
+            'use_ai' => 'boolean',
+            'free_text_question' => 'nullable|string'
         ]);
 
-        $answer = $analyticsService->answerQuery($validated['product_name'], $validated['question_type']);
+        $useAi = $validated['use_ai'] ?? false;
+        
+        if ($useAi) {
+            $question = $validated['free_text_question'] ?? "Dimmi di più sul prodotto {$validated['product_name']}";
+            $answer = $analyticsService->answerQueryWithAi($question);
+        } else {
+            $answer = $analyticsService->answerQuery($validated['product_name'] ?? '', $validated['question_type'] ?? 'complementary');
+        }
 
         return response()->json(['answer' => $answer]);
     }

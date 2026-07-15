@@ -70,14 +70,16 @@ const availableProducts = computed(() => page.props.products || []);
 
 const assistantForm = ref({
     product_name: '',
-    question_type: ''
+    question_type: '',
+    use_ai: false,
+    free_text_question: ''
 });
 const assistantAnswer = ref('');
 const askingAssistant = ref(false);
 
 const askAssistant = async () => {
-    if (!assistantForm.value.product_name || !assistantForm.value.question_type) {
-        alert('Seleziona sia il prodotto che il tipo di domanda.');
+    if (!assistantForm.value.use_ai && (!assistantForm.value.product_name || !assistantForm.value.question_type)) {
+        alert('Seleziona sia il prodotto che il tipo di domanda (oppure attiva la Modalità AI Copilot).');
         return;
     }
     
@@ -313,10 +315,21 @@ const cancelSliderChange = () => {
 
                 <!-- TAB 3: ASSISTANT -->
                 <div v-show="activeTab === 'assistant'" class="bg-white p-6 rounded-lg shadow space-y-6">
-                    <h3 class="text-xl font-bold text-gray-800 border-b pb-2">Assistente alle Vendite</h3>
-                    <p class="text-sm text-gray-600">Poni domande specifiche su un prodotto e lascia che il sistema calcoli le migliori strategie basandosi sui dati di vendita.</p>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">Assistente alle Vendite</h3>
+                            <p class="text-sm text-gray-600">Poni domande specifiche per calcolare le migliori strategie basandosi sui dati di vendita.</p>
+                        </div>
+                        <div class="mt-4 md:mt-0 flex items-center bg-gray-50 p-2 rounded-lg border">
+                            <span class="mr-3 text-sm font-bold text-gray-700">Modalità AI Copilot</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" v-model="assistantForm.use_ai" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+                    </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg border">
+                    <div v-if="!assistantForm.use_ai" class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg border">
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Seleziona Prodotto</label>
                             <select v-model="assistantForm.product_name" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
@@ -336,10 +349,15 @@ const cancelSliderChange = () => {
                         </div>
                     </div>
 
+                    <div v-else class="bg-indigo-50 p-6 rounded-lg border border-indigo-200">
+                        <label class="block text-sm font-bold text-indigo-900 mb-2">Poni una domanda libera alla tua AI (conosce tutto il tuo Data Lake, inclusi RFM e Market Basket)</label>
+                        <textarea v-model="assistantForm.free_text_question" rows="3" placeholder="Es. Considerando i clienti dormienti, quale bundle di prodotti mi consigli per riattivarli?" class="block w-full rounded-md border-indigo-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                    </div>
+
                     <div class="flex justify-end mt-4">
-                        <button @click="askAssistant" :disabled="askingAssistant || !assistantForm.product_name || !assistantForm.question_type" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center shadow">
-                            <span v-if="askingAssistant">Calcolo in corso...</span>
-                            <span v-else>Interroga l'Assistente</span>
+                        <button @click="askAssistant" :disabled="askingAssistant || (!assistantForm.use_ai && (!assistantForm.product_name || !assistantForm.question_type))" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center shadow">
+                            <span v-if="askingAssistant">Elaborazione in corso...</span>
+                            <span v-else>Invia Domanda</span>
                         </button>
                     </div>
 
