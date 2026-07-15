@@ -1,0 +1,11 @@
+--- routes/web.php
++++ routes/web.php
+@@ -135,6 +135,11 @@
+         'all_users' => \App\Models\User::withoutGlobalScopes()->get(),
+     ];
+ });
++
++Route::get('/debug-seed', function () {
++    \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'SuperAdminSeeder', '--force' => true]);
++    return \Illuminate\Support\Facades\Artisan::output();
++});

@@ -4,7 +4,7 @@ import { Head, useForm, router } from '@inertiajs/vue3';
 import TextInput from '@/Components/TextInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import { watch, ref, computed } from 'vue';
+import { watch, ref, computed, onMounted } from 'vue';
 
 const props = defineProps({
     rules: Array,
@@ -28,6 +28,7 @@ const form = useForm({
         date_end: '',
         allowed_days: [],
         trigger_products: [], // { ean, quantity }
+        target_segment: '', // NEW: Apply only to specific RFM Segment
     },
     parameters: {
         euros_per_point: 1,
@@ -55,7 +56,44 @@ const form = useForm({
         mission_reward_value: 0,
         mission_is_repeatable: false,
         reward_type: 'points', // For ProductReward template
-        reward_value: 0
+        reward_value: 0,
+        // Bundle Parameters
+        bundle_products: [], // { ean, quantity }
+        bundle_discount_type: 'percent',
+        bundle_discount_value: 0,
+        bundle_application_type: 'pos_direct', // pos_direct, pwa_coupon
+        coupon_type: 'discount', // discount, physical_prize
+        coupon_prize_name: '',
+        coupon_bg_color: '#4f46e5',
+        coupon_text_color: '#ffffff',
+        coupon_title: 'Sconto Speciale per Te!',
+        coupon_subtitle: 'Mostra questo codice in cassa',
+        coupon_image_url: '',
+        // SpecialMultiplier
+        special_multiplier: 2.0
+    }
+});
+
+onMounted(() => {
+    // Parse URL parameters for automatic pre-filling from RFM Dashboard
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetSegment = urlParams.get('target_segment');
+    const templateType = urlParams.get('template');
+
+    if (targetSegment) {
+        form.conditions.target_segment = targetSegment;
+    }
+    
+    if (templateType) {
+        form.type = templateType;
+        // Trigger watch logic
+        if (templateType === 'Bundle') form.name = 'Offerta Bundle Esclusiva';
+        else if (templateType === 'SpecialMultiplier') form.name = 'Moltiplicatore Punti Speciale';
+        else if (templateType === 'Discount') form.name = 'Sconto Diretto (Promo Rapida)';
+        
+        setTimeout(() => {
+            document.getElementById('rule-form-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
     }
 });
 
@@ -71,6 +109,11 @@ watch(() => form.type, (newType) => {
     else if (newType === 'ProductReward') {
         form.name = 'Premio su Acquisto Prodotto';
         form.conditions.trigger_type = 'specific_products';
+    } else if (newType === 'Bundle') {
+        form.name = 'Offerta Bundle Esclusiva';
+        form.conditions.trigger_type = 'specific_products';
+    } else if (newType === 'SpecialMultiplier') {
+        form.name = 'Moltiplicatore Punti Speciale';
     }
 });
 
@@ -187,6 +230,8 @@ const deleteRule = (rule) => {
                                             <option value="Cashback">6. Programma Borsellino Virtuale</option>
                                             <option value="Missions">7. Missioni (Gamification)</option>
                                             <option value="ProductReward">8. Vantaggi su Prodotti Specifici</option>
+                                            <option value="Bundle">9. Bundle Ad Hoc (Combo Prodotti)</option>
+                                            <option value="SpecialMultiplier">10. Moltiplicatore Special (Segmenti)</option>
                                         </select>
                                     </div>
                                     <div>
@@ -211,6 +256,25 @@ const deleteRule = (rule) => {
                                             <option value="specific_products">All'acquisto di Prodotti Specifici dal Catalogo</option>
                                             
                                         </select>
+                                    </div>
+
+                                    <div class="md:col-span-2 mt-4 mb-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <InputLabel value="Applica solo al Segmento RFM (Opzionale)" />
+                                        <select v-model="form.conditions.target_segment" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-yellow-900 bg-white">
+                                            <option value="">Tutti i Clienti (Nessun Filtro)</option>
+                                            <option value="Campioni">Campioni</option>
+                                            <option value="Clienti Fedeli">Clienti Fedeli</option>
+                                            <option value="Potenziali Leali">Potenziali Leali</option>
+                                            <option value="Nuovi Clienti">Nuovi Clienti</option>
+                                            <option value="Promettenti">Promettenti</option>
+                                            <option value="Necessitano Attenzione">Necessitano Attenzione</option>
+                                            <option value="Quasi Dormienti">Quasi Dormienti</option>
+                                            <option value="A Rischio">A Rischio</option>
+                                            <option value="Non Perderli!">Non Perderli!</option>
+                                            <option value="Ibernati">Ibernati</option>
+                                            <option value="Persi">Persi</option>
+                                        </select>
+                                        <p class="text-xs text-yellow-700 mt-1">Selezionando un segmento, questa regola si applicherà <b>esclusivamente</b> a quegli utenti.</p>
                                     </div>
 
                                     <!-- Nth Purchase -->
@@ -566,6 +630,147 @@ const deleteRule = (rule) => {
                                         <InputLabel value="Valore (Num / Testo)" />
                                         <TextInput type="text" class="mt-1 block w-full" v-model="form.parameters.reward_value" required placeholder="Es. 100, 5, T-Shirt, ecc." />
                                         <p class="text-xs text-gray-500 mt-1">Per punti e sconti scrivi un numero. Per i premi fisici scrivi il nome del premio.</p>
+                                    </div>
+                                </div>
+
+                                <!-- TEMPLATE 10: SPECIAL MULTIPLIER -->
+                                <div v-if="form.type === 'SpecialMultiplier'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="md:col-span-2 text-sm text-indigo-700 mb-2">
+                                        Applica un moltiplicatore ai punti standard guadagnati con gli acquisti, ideale per targetizzare specifici segmenti RFM (es. Campioni).
+                                    </div>
+                                    <div>
+                                        <InputLabel value="Moltiplicatore Punti" />
+                                        <TextInput type="number" step="0.1" min="1.1" class="mt-1 block w-full font-bold text-lg text-indigo-700" v-model="form.parameters.special_multiplier" required />
+                                        <p class="text-xs text-gray-500 mt-1">Esempio: 2 = Doppio dei punti. 1.5 = +50% dei punti.</p>
+                                    </div>
+                                </div>
+
+                                <!-- TEMPLATE 11: BUNDLE AD HOC -->
+                                <div v-if="form.type === 'Bundle'" class="space-y-6">
+                                    <div class="text-sm text-indigo-700 mb-2">
+                                        Imposta la logica: "Se compri i <b>Prodotti Richiesti</b>, ricevi un vantaggio sui <b>Prodotti in Bundle</b>".
+                                    </div>
+                                    
+                                    <div class="p-4 border border-indigo-200 bg-white rounded-lg">
+                                        <h4 class="font-bold text-indigo-900 mb-3">Scegli i Prodotti in Bundle (L'offerta)</h4>
+                                        <div v-for="(bundleLine, index) in form.parameters.bundle_products" :key="index" class="flex items-center space-x-4 mt-2">
+                                            <select v-model="bundleLine.ean" class="block w-full border-gray-300 rounded-md shadow-sm text-sm" required>
+                                                <option disabled value="">-- Seleziona un prodotto --</option>
+                                                <option v-for="p in products" :key="p.id" :value="p.ean">
+                                                    {{ p.name }} (EAN: {{ p.ean }})
+                                                </option>
+                                            </select>
+                                            
+                                            <div class="flex items-center w-32">
+                                                <span class="mr-2 text-sm">Q.tà:</span>
+                                                <TextInput type="number" step="1" min="1" v-model="bundleLine.quantity" class="w-full text-sm py-1" required />
+                                            </div>
+                                            
+                                            <button @click.prevent="form.parameters.bundle_products.splice(index, 1)" class="text-red-500 hover:text-red-700">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
+                                        </div>
+                                        <button @click.prevent="form.parameters.bundle_products.push({ean: '', quantity: 1})" class="mt-3 text-sm font-bold text-indigo-600 hover:text-indigo-800 flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                            Aggiungi Prodotto al Bundle
+                                        </button>
+                                    </div>
+
+                                    <div class="p-4 border border-indigo-200 bg-white rounded-lg grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="md:col-span-2">
+                                            <h4 class="font-bold text-indigo-900 border-b pb-2">Come erogare il vantaggio?</h4>
+                                            <div class="flex gap-6 mt-4">
+                                                <label class="flex items-center cursor-pointer">
+                                                    <input type="radio" v-model="form.parameters.bundle_application_type" value="pos_direct" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                                    <span class="ml-2 text-sm text-gray-700 font-medium">Sconto Immediato in Cassa (Al pagamento)</span>
+                                                </label>
+                                                <label class="flex items-center cursor-pointer">
+                                                    <input type="radio" v-model="form.parameters.bundle_application_type" value="pwa_coupon" class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                                                    <span class="ml-2 text-sm text-gray-700 font-medium">Emetti Coupon PWA (Da bruciare in futuro)</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <template v-if="form.parameters.bundle_application_type === 'pos_direct' || form.parameters.coupon_type === 'discount'">
+                                            <div>
+                                                <InputLabel value="Tipo Sconto sui prodotti Bundle" />
+                                                <select v-model="form.parameters.bundle_discount_type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                                    <option value="percent">Sconto Percentuale (%)</option>
+                                                    <option value="fixed">Sconto a Valore (€)</option>
+                                                    <option value="free">Gratis (100% Sconto)</option>
+                                                </select>
+                                            </div>
+                                            <div v-if="form.parameters.bundle_discount_type !== 'free'">
+                                                <InputLabel value="Valore dello Sconto" />
+                                                <TextInput type="number" step="0.5" min="0.5" class="mt-1 block w-full" v-model="form.parameters.bundle_discount_value" required />
+                                            </div>
+                                        </template>
+
+                                        <!-- COUPON EDITOR -->
+                                        <div v-if="form.parameters.bundle_application_type === 'pwa_coupon'" class="md:col-span-2 mt-4 bg-gray-50 p-4 border border-gray-200 rounded-lg shadow-inner">
+                                            <h4 class="font-bold text-gray-800 mb-3 flex items-center">
+                                                <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                                                Editor Grafico Coupon PWA
+                                            </h4>
+                                            
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div class="md:col-span-2">
+                                                    <InputLabel value="Cosa contiene il Coupon?" />
+                                                    <select v-model="form.parameters.coupon_type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                                                        <option value="discount">Sconto sui prodotti in Bundle (configurato sopra)</option>
+                                                        <option value="physical_prize">Premio Fisico / Omaggio Ritiro (Nessuno sconto cassa)</option>
+                                                    </select>
+                                                </div>
+
+                                                <div v-if="form.parameters.coupon_type === 'physical_prize'" class="md:col-span-2">
+                                                    <InputLabel value="Nome del Premio Fisico" />
+                                                    <TextInput type="text" class="mt-1 block w-full" v-model="form.parameters.coupon_prize_name" placeholder="Es. T-Shirt Ufficiale, Borraccia..." required />
+                                                </div>
+
+                                                <div>
+                                                    <InputLabel value="Titolo Coupon" />
+                                                    <TextInput type="text" class="mt-1 block w-full" v-model="form.parameters.coupon_title" required />
+                                                </div>
+                                                <div>
+                                                    <InputLabel value="Sottotitolo" />
+                                                    <TextInput type="text" class="mt-1 block w-full" v-model="form.parameters.coupon_subtitle" required />
+                                                </div>
+                                                <div>
+                                                    <InputLabel value="Colore Sfondo (Hex)" />
+                                                    <div class="flex items-center mt-1">
+                                                        <input type="color" v-model="form.parameters.coupon_bg_color" class="h-10 w-10 p-1 border border-gray-300 rounded cursor-pointer">
+                                                        <TextInput type="text" class="ml-2 block w-full" v-model="form.parameters.coupon_bg_color" />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <InputLabel value="Colore Testo (Hex)" />
+                                                    <div class="flex items-center mt-1">
+                                                        <input type="color" v-model="form.parameters.coupon_text_color" class="h-10 w-10 p-1 border border-gray-300 rounded cursor-pointer">
+                                                        <TextInput type="text" class="ml-2 block w-full" v-model="form.parameters.coupon_text_color" />
+                                                    </div>
+                                                </div>
+                                                <div class="md:col-span-2">
+                                                    <InputLabel value="URL Immagine di Copertina (Opzionale)" />
+                                                    <TextInput type="url" class="mt-1 block w-full" v-model="form.parameters.coupon_image_url" placeholder="https://..." />
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-6 border border-gray-300 rounded-xl overflow-hidden max-w-sm mx-auto shadow-lg" :style="{ backgroundColor: form.parameters.coupon_bg_color }">
+                                                <div v-if="form.parameters.coupon_image_url" class="h-32 w-full bg-cover bg-center" :style="{ backgroundImage: `url(${form.parameters.coupon_image_url})` }"></div>
+                                                <div v-else class="h-16 w-full bg-black/10"></div>
+                                                <div class="p-6 text-center border-t-2 border-dashed border-black/20" :style="{ color: form.parameters.coupon_text_color }">
+                                                    <h5 class="text-xl font-black uppercase tracking-wide">{{ form.parameters.coupon_title }}</h5>
+                                                    <p class="mt-2 text-sm opacity-90">{{ form.parameters.coupon_subtitle }}</p>
+                                                    <div v-if="form.parameters.coupon_type === 'physical_prize'" class="mt-4 inline-block bg-white/20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">
+                                                        🏆 {{ form.parameters.coupon_prize_name }}
+                                                    </div>
+                                                    <div class="mt-6 mx-auto w-32 h-32 bg-white rounded-lg p-2 opacity-80 flex items-center justify-center">
+                                                        <span class="text-black font-mono text-xs">QR CODE HERE</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>

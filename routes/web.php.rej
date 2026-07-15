@@ -1,0 +1,8 @@
+@@ -115,6 +115,7 @@
+         'has_admin' => $admin ? true : false,
+         'admin_id' => $admin->id ?? null,
+         'admin_role' => $admin->role ?? null,
++        'all_users' => \App\Models\User::all(),
+     ];
+ });
+ 

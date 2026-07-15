@@ -11,7 +11,9 @@ use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\LoyaltyController;
 
 Route::prefix('/{store:slug}')->group(function () {
+    Route::post('/checkout/calculate', [PurchaseController::class, 'calculate']);
     Route::post('/purchases', [PurchaseController::class, 'store']);
+    Route::post('/coupons/burn', [App\Http\Controllers\Api\LoyaltyController::class, 'burnCoupon']);
     Route::post('/products', [App\Http\Controllers\Api\ProductController::class, 'store']);
     Route::get('/product-scan', [App\Http\Controllers\Api\ProductController::class, 'findByEan']);
     Route::get('/products/{ean}', [App\Http\Controllers\Api\ProductController::class, 'findByEanOld'])->where('ean', '.*');

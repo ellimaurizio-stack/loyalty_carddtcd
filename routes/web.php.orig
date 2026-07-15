@@ -62,8 +62,6 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/analytics', [App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('admin.analytics');
-    Route::get('/analytics/rfm', [App\Http\Controllers\Admin\RfmController::class, 'index'])->name('admin.analytics.rfm');
-    Route::get('/analytics/rfm/export', [App\Http\Controllers\Admin\RfmController::class, 'exportCsv'])->name('admin.analytics.rfm.export');
     Route::post('/analytics/generate', [App\Http\Controllers\Admin\AnalyticsController::class, 'generate'])->name('admin.analytics.generate');
     Route::get('/analytics/template', [App\Http\Controllers\Admin\AnalyticsController::class, 'downloadTemplate'])->name('admin.analytics.template');
     Route::post('/analytics/import', [App\Http\Controllers\Admin\AnalyticsController::class, 'importCsv'])->name('admin.analytics.import');
@@ -127,11 +125,6 @@ Route::get('/debug/delete-customer/{query}', function ($query) {
 
 Route::get('/debug-log', function () {
     return response(file_get_contents(storage_path('logs/laravel.log')))->header('Content-Type', 'text/plain');
-});
-
-Route::get('/debug-seed', function () {
-    \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'SuperAdminSeeder', '--force' => true]);
-    return \Illuminate\Support\Facades\Artisan::output();
 });
 
 Route::get('/debug-db', function () {

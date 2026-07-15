@@ -67,16 +67,16 @@ function closePromoModal() {
     activeSegment.value = '';
 }
 
-function createPromo(type) {
-    router.post(route('admin.analytics.rfm.promo'), {
-        segment: activeSegment.value,
-        promo_type: type,
-        brand_id: selectedBrand.value
-    }, {
-        onSuccess: () => {
-            closePromoModal();
-        }
-    });
+function createPromo(templateType) {
+    const urlParams = {
+        target_segment: activeSegment.value,
+        template: templateType
+    };
+    if (selectedBrand.value) urlParams.brand_id = selectedBrand.value;
+    if (selectedStore.value) urlParams.store_id = selectedStore.value;
+    
+    router.get(route('admin.rules.index'), urlParams);
+    closePromoModal();
 }
 </script>
 
@@ -179,31 +179,33 @@ function createPromo(type) {
                         <div class="sm:flex sm:items-start">
                             <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                                 <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                    Crea Azione Rapida per: {{ activeSegment }}
+                                    Seleziona Template Regola per: {{ activeSegment }}
                                 </h3>
-                                <div class="mt-4 space-y-4">
-                                    <button @click="createPromo('Sconto Percentuale')" class="w-full flex justify-between items-center p-4 border rounded-lg hover:bg-indigo-50 hover:border-indigo-500 transition">
-                                        <div class="text-left">
-                                            <span class="block font-bold text-gray-900">Sconto Percentuale</span>
-                                            <span class="block text-sm text-gray-500">Invia un Coupon di sconto % a tutti i clienti di questo segmento.</span>
-                                        </div>
-                                        <span class="text-indigo-600 text-xl font-bold">%</span>
+                                <p class="text-sm text-gray-500 mt-1 mb-4">Scegli quale meccanica applicare al segmento. Verrai reindirizzato al Rule Engine per completare i dettagli dell'offerta.</p>
+                                <div class="mt-4 space-y-3 max-h-96 overflow-y-auto pr-2">
+                                    <button @click="createPromo('Bundle')" class="w-full text-left p-4 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors">
+                                        <div class="font-bold text-indigo-900">Bundle Ad Hoc (Sconto o Premio Fisico)</div>
+                                        <div class="text-xs text-indigo-700">Se compri X, ricevi Y in bundle (o emetti un Coupon su App).</div>
                                     </button>
-
-                                    <button @click="createPromo('Cashback Moltiplicatore')" class="w-full flex justify-between items-center p-4 border rounded-lg hover:bg-green-50 hover:border-green-500 transition">
-                                        <div class="text-left">
-                                            <span class="block font-bold text-gray-900">Cashback Moltiplicatore</span>
-                                            <span class="block text-sm text-gray-500">Moltiplica x2 o x3 i punti per gli acquisti di questo segmento.</span>
-                                        </div>
-                                        <span class="text-green-600 text-xl font-bold">x2</span>
+                                    <button @click="createPromo('SpecialMultiplier')" class="w-full text-left p-4 border border-green-200 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+                                        <div class="font-bold text-green-900">Moltiplicatore Punti Speciale</div>
+                                        <div class="text-xs text-green-700">Moltiplica i punti accumulati dal segmento (es. x2).</div>
                                     </button>
-
-                                    <button @click="createPromo('Bundle Esclusivo')" class="w-full flex justify-between items-center p-4 border rounded-lg hover:bg-orange-50 hover:border-orange-500 transition">
-                                        <div class="text-left">
-                                            <span class="block font-bold text-gray-900">Bundle Esclusivo</span>
-                                            <span class="block text-sm text-gray-500">Crea un'offerta 2x1 o pacchetto speciale solo per loro.</span>
-                                        </div>
-                                        <span class="text-orange-600 text-xl font-bold">+</span>
+                                    <button @click="createPromo('Discount')" class="w-full text-left p-4 border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors">
+                                        <div class="font-bold text-gray-900">Sconto Diretto (Fisso o %)</div>
+                                        <div class="text-xs text-gray-600">Sconto applicato direttamente al totale spesa.</div>
+                                    </button>
+                                    <button @click="createPromo('Points')" class="w-full text-left p-4 border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors">
+                                        <div class="font-bold text-gray-900">Motore Punti Base</div>
+                                        <div class="text-xs text-gray-600">Cambia le regole di accumulo standard.</div>
+                                    </button>
+                                    <button @click="createPromo('ProductReward')" class="w-full text-left p-4 border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors">
+                                        <div class="font-bold text-gray-900">Vantaggi su Prodotti Specifici</div>
+                                        <div class="text-xs text-gray-600">Premia l'acquisto di specifici EAN in scontrino.</div>
+                                    </button>
+                                    <button @click="createPromo('Missions')" class="w-full text-left p-4 border border-gray-200 hover:bg-gray-50 rounded-lg transition-colors">
+                                        <div class="font-bold text-gray-900">Missioni Gamification</div>
+                                        <div class="text-xs text-gray-600">Sfide ripetibili per aumentare le visite o la spesa.</div>
                                     </button>
                                 </div>
                             </div>

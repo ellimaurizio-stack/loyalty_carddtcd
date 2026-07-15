@@ -1,0 +1,14 @@
+@@ -107,4 +107,13 @@
+ Route::get('/debug-log', function () {
+     return response(file_get_contents(storage_path('logs/laravel.log')))->header('Content-Type', 'text/plain');
+ });
++
++Route::get('/debug-db', function () {
++    $admin = \App\Models\User::where('email', 'admin@loyalty.com')->first();
++    return [
++        'has_admin' => $admin ? true : false,
++        'admin_id' => $admin->id ?? null,
++        'admin_role' => $admin->role ?? null,
++    ];
++});
+ 

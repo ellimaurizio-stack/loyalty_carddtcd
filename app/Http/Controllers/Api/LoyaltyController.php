@@ -135,4 +135,31 @@ class LoyaltyController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function burnCoupon(Request $request, Store $store)
+    {
+        $validated = $request->validate([
+            'coupon_id' => 'required|integer|exists:customer_rewards,id',
+        ]);
+
+        $reward = \App\Models\CustomerReward::where('id', $validated['coupon_id'])
+            ->where('is_redeemed', false)
+            ->first();
+
+        if (!$reward) {
+            return response()->json(['error' => 'Coupon non trovato o già riscattato'], 400);
+        }
+
+        $reward->update(['is_redeemed' => true]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Coupon riscattato con successo!',
+            'reward_details' => [
+                'type' => $reward->reward_type,
+                'value' => $reward->reward_value,
+                'description' => $reward->description,
+            ]
+        ]);
+    }
 }
