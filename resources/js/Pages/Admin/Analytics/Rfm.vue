@@ -6,6 +6,7 @@ import { ref, computed } from 'vue';
 const props = defineProps({
     total_customers: Number,
     segments: Object,
+    trends: Array,
     brands: Array,
     stores: Array,
     filters: Object
@@ -45,11 +46,37 @@ function applyFilters() {
 }
 
 function exportCsv(segmentName) {
-    alert('Export CSV per ' + segmentName + ' (in arrivo nella Fase 3)');
+    const url = new URL(route('admin.analytics.rfm.export'));
+    url.searchParams.append('segment', segmentName);
+    if (selectedBrand.value) url.searchParams.append('brand_id', selectedBrand.value);
+    if (selectedStore.value) url.searchParams.append('store_id', selectedStore.value);
+    
+    window.location.href = url.toString();
 }
 
+const showPromoModal = ref(false);
+const activeSegment = ref('');
+
 function quickAction(segmentName) {
-    alert('Azione Rapida Promo per ' + segmentName + ' (in arrivo nella Fase 3)');
+    activeSegment.value = segmentName;
+    showPromoModal.value = true;
+}
+
+function closePromoModal() {
+    showPromoModal.value = false;
+    activeSegment.value = '';
+}
+
+function createPromo(type) {
+    router.post(route('admin.analytics.rfm.promo'), {
+        segment: activeSegment.value,
+        promo_type: type,
+        brand_id: selectedBrand.value
+    }, {
+        onSuccess: () => {
+            closePromoModal();
+        }
+    });
 }
 </script>
 
@@ -85,10 +112,29 @@ function quickAction(segmentName) {
                     </div>
                 </div>
 
-                <!-- Totali -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 text-center">
-                    <p class="text-gray-500 text-sm uppercase tracking-wide">Clienti Analizzati</p>
-                    <p class="text-4xl font-extrabold text-indigo-600 mt-2">{{ total_customers }}</p>
+                <!-- Totali e Trend -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 text-center flex flex-col justify-center">
+                        <p class="text-gray-500 text-sm uppercase tracking-wide">Clienti Analizzati</p>
+                        <p class="text-4xl font-extrabold text-indigo-600 mt-2">{{ total_customers }}</p>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                        <h3 class="text-gray-500 text-sm uppercase tracking-wide mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            Trend e Allarmi (Ultimi Movimenti)
+                        </h3>
+                        <div v-if="trends.length === 0" class="text-sm text-gray-500 italic">
+                            Nessun movimento rilevante rilevato al momento.
+                        </div>
+                        <ul v-else class="space-y-3">
+                            <li v-for="(t, i) in trends" :key="i" class="text-sm border-b pb-2 last:border-0">
+                                <span class="font-bold text-gray-900">{{ t.total }} Clienti</span> sono passati da 
+                                <span class="line-through text-gray-400">{{ t.rfm_previous_segment }}</span> 
+                                a <span class="font-semibold" :class="segmentDetails[t.rfm_segment]?.color.split(' ')[1]">{{ t.rfm_segment }}</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
 
                 <!-- Grid Segmenti -->
@@ -118,6 +164,57 @@ function quickAction(segmentName) {
                     </div>
                 </div>
 
+            </div>
+        </div>
+
+        <!-- Modale Azione Rapida Promo -->
+        <div v-if="showPromoModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closePromoModal"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                    Crea Azione Rapida per: {{ activeSegment }}
+                                </h3>
+                                <div class="mt-4 space-y-4">
+                                    <button @click="createPromo('Sconto Percentuale')" class="w-full flex justify-between items-center p-4 border rounded-lg hover:bg-indigo-50 hover:border-indigo-500 transition">
+                                        <div class="text-left">
+                                            <span class="block font-bold text-gray-900">Sconto Percentuale</span>
+                                            <span class="block text-sm text-gray-500">Invia un Coupon di sconto % a tutti i clienti di questo segmento.</span>
+                                        </div>
+                                        <span class="text-indigo-600 text-xl font-bold">%</span>
+                                    </button>
+
+                                    <button @click="createPromo('Cashback Moltiplicatore')" class="w-full flex justify-between items-center p-4 border rounded-lg hover:bg-green-50 hover:border-green-500 transition">
+                                        <div class="text-left">
+                                            <span class="block font-bold text-gray-900">Cashback Moltiplicatore</span>
+                                            <span class="block text-sm text-gray-500">Moltiplica x2 o x3 i punti per gli acquisti di questo segmento.</span>
+                                        </div>
+                                        <span class="text-green-600 text-xl font-bold">x2</span>
+                                    </button>
+
+                                    <button @click="createPromo('Bundle Esclusivo')" class="w-full flex justify-between items-center p-4 border rounded-lg hover:bg-orange-50 hover:border-orange-500 transition">
+                                        <div class="text-left">
+                                            <span class="block font-bold text-gray-900">Bundle Esclusivo</span>
+                                            <span class="block text-sm text-gray-500">Crea un'offerta 2x1 o pacchetto speciale solo per loro.</span>
+                                        </div>
+                                        <span class="text-orange-600 text-xl font-bold">+</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="button" @click="closePromoModal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Annulla
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </AuthenticatedLayout>

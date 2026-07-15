@@ -63,6 +63,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/analytics', [App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('admin.analytics');
     Route::get('/analytics/rfm', [App\Http\Controllers\Admin\RfmController::class, 'index'])->name('admin.analytics.rfm');
+    Route::get('/analytics/rfm/export', [App\Http\Controllers\Admin\RfmController::class, 'exportCsv'])->name('admin.analytics.rfm.export');
+    Route::post('/analytics/rfm/promo', [App\Http\Controllers\Admin\RfmController::class, 'createQuickPromo'])->name('admin.analytics.rfm.promo');
     Route::post('/analytics/generate', [App\Http\Controllers\Admin\AnalyticsController::class, 'generate'])->name('admin.analytics.generate');
     Route::get('/analytics/template', [App\Http\Controllers\Admin\AnalyticsController::class, 'downloadTemplate'])->name('admin.analytics.template');
     Route::post('/analytics/import', [App\Http\Controllers\Admin\AnalyticsController::class, 'importCsv'])->name('admin.analytics.import');

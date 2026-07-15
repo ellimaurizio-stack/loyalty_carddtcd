@@ -83,6 +83,10 @@ class RfmService
 
             $segment = $this->determineSegment($r, $f, $m);
 
+            if ($data['customer']->rfm_segment !== $segment) {
+                $data['customer']->rfm_previous_segment = $data['customer']->rfm_segment;
+            }
+
             $data['customer']->update([
                 'recency_score' => $r,
                 'frequency_score' => $f,

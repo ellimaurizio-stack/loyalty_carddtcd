@@ -33,6 +33,7 @@ class Customer extends Authenticatable
         'frequency_score',
         'monetary_score',
         'rfm_segment',
+        'rfm_previous_segment',
         'rfm_updated_at',
     ];
 
