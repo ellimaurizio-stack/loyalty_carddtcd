@@ -9,8 +9,11 @@ Route::get('/user', function (Request $request) {
 
 use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\LoyaltyController;
+use App\Http\Controllers\Api\AuthController;
 
-Route::prefix('/{store:slug}')->group(function () {
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::prefix('/{store:slug}')->middleware('auth:sanctum')->group(function () {
     Route::post('/checkout/calculate', [PurchaseController::class, 'calculate']);
     Route::post('/purchases', [PurchaseController::class, 'store']);
     Route::post('/coupons/burn', [App\Http\Controllers\Api\LoyaltyController::class, 'burnCoupon']);
