@@ -10,32 +10,50 @@ use App\Models\Brand;
 
 class DashboardController extends Controller
 {
-    private function resolveBrandId(Request $request)
+    private function resolveContext(Request $request)
     {
         $user = auth()->user();
-        if ($user->role === 'brand_manager') {
-            return $user->brand_id;
+        
+        if ($user->role === 'store_manager') {
+            return [
+                'brand_id' => $user->brand_id,
+                'store_id' => $user->store_id,
+            ];
         }
-        $brandId = $request->query('brand_id') ?? $request->input('brand_id');
-        if (!$brandId) {
+
+        $brandId = $user->role === 'brand_manager' ? $user->brand_id : ($request->query('brand_id') ?? $request->input('brand_id'));
+        if (!$brandId && $user->role === 'super_admin') {
             $brandId = Brand::first()->id ?? null;
         }
-        return $brandId;
+
+        $storeId = $request->query('store_id') ?? $request->input('store_id');
+
+        return [
+            'brand_id' => $brandId,
+            'store_id' => $storeId,
+        ];
     }
 
     public function index(Request $request)
     {
-        $brandId = $this->resolveBrandId($request);
+        $context = $this->resolveContext($request);
+        $brandId = $context['brand_id'];
+        $storeId = $context['store_id'];
 
-        $program = LoyaltyProgram::withoutGlobalScopes()->where('brand_id', $brandId)->first();
-        if (!$program) {
-            $program = LoyaltyProgram::create([
-                'brand_id' => $brandId,
-                'name' => 'Default Program',
-                'purchases_threshold' => 2,
-                'is_active' => true,
-            ]);
+        $query = LoyaltyProgram::withoutGlobalScopes()->where('brand_id', $brandId);
+        if ($storeId) {
+            $query->where('store_id', $storeId);
+        } else {
+            $query->whereNull('store_id');
         }
+
+        $program = $query->firstOrCreate([
+            'brand_id' => $brandId,
+            'store_id' => $storeId,
+            'name' => 'Default Program',
+            'purchases_threshold' => 2,
+            'is_active' => true,
+        ]);
 
         $customersQuery = Customer::withCount('purchases');
         if (auth()->user()->role === 'super_admin' && $brandId) {
@@ -44,12 +62,15 @@ class DashboardController extends Controller
         $customers = $customersQuery->orderBy('id', 'desc')->get();
         
         $brands = auth()->user()->role === 'super_admin' ? Brand::all(['id', 'name']) : [];
+        $stores = $brandId ? \App\Models\Store::where('brand_id', $brandId)->get(['id', 'name']) : [];
 
         return Inertia::render('Dashboard', [
             'program' => $program,
             'customers' => $customers,
             'brands' => $brands,
+            'stores' => $stores,
             'currentBrandId' => $brandId,
+            'currentStoreId' => $storeId,
         ]);
     }
 

@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { useForm, Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import BrandSelector from '@/Components/BrandSelector.vue';
+import ContextSelector from '@/Components/ContextSelector.vue';
 
 const props = defineProps({
     settings: {
@@ -10,22 +10,26 @@ const props = defineProps({
         required: true
     },
     brands: Array,
+    stores: Array,
     currentBrandId: [Number, String],
+    currentStoreId: [Number, String],
 });
 
 const form = useForm({
-    app_name: props.settings?.app_name || 'Loyalty App',
-    primary_color: props.settings?.primary_color || '#4f46e5',
-    background_color: props.settings?.background_color || '#f3f4f6',
-    text_color: props.settings?.text_color || '#111827',
-    card_color: props.settings?.card_color || '#4f46e5',
-    card_text_color: props.settings?.card_text_color || '#ffffff',
+    app_name: props.settings.app_name || 'Fidelity App',
+    primary_color: props.settings.primary_color || '#3F51B5',
+    background_color: props.settings.background_color || '#F3F4F6',
+    text_color: props.settings.text_color || '#1F2937',
+    card_color: props.settings.card_color || '#FFFFFF',
+    card_text_color: props.settings.card_text_color || '#1F2937',
+    registration_fields: props.settings.registration_fields || ['name', 'email', 'phone'],
+    privacy_policy: props.settings.privacy_policy || 'Accetto i termini e le condizioni d\'uso.',
     logo: null,
     background_image: null,
 });
 
-const logoPreview = ref(props.settings?.logo_path ? `/storage/${props.settings.logo_path}` : null);
-const bgPreview = ref(props.settings?.background_image_path ? `/storage/${props.settings.background_image_path}` : null);
+const logoPreview = ref(props.settings.logo_path ? `/storage/${props.settings.logo_path}` : null);
+const bgPreview = ref(props.settings.background_image_path ? `/storage/${props.settings.background_image_path}` : null);
 
 const handleLogoChange = (e) => {
     const file = e.target.files[0];
@@ -44,8 +48,13 @@ const handleBgChange = (e) => {
 };
 
 const submit = () => {
-    form.post(route('admin.pwa.update'), {
+    form.transform((data) => ({
+        ...data,
+        brand_id: props.currentBrandId,
+        store_id: props.currentStoreId,
+    })).post(route('admin.pwa.update'), {
         preserveScroll: true,
+        forceFormData: true,
     });
 };
 </script>
@@ -61,9 +70,11 @@ const submit = () => {
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
                 
-                <BrandSelector 
-                    :brands="brands" 
-                    :currentBrandId="currentBrandId" 
+                <ContextSelector 
+                    :brands="brands"
+                    :stores="stores"
+                    :currentBrandId="currentBrandId"
+                    :currentStoreId="currentStoreId"
                 />
 
                 <div v-if="$page.props.flash.success" class="mb-4 font-medium text-sm text-green-600 bg-green-100 p-4 rounded-md">

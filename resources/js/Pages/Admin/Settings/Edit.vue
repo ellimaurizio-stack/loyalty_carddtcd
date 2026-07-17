@@ -1,13 +1,15 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import BrandSelector from '@/Components/BrandSelector.vue';
+import ContextSelector from '@/Components/ContextSelector.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({
     program: Object,
     brands: Array,
+    stores: Array,
     currentBrandId: [Number, String],
+    currentStoreId: [Number, String],
 });
 
 const form = useForm({
@@ -94,7 +96,11 @@ const submit = () => {
         }
     });
 
-    form.post(route('settings.update'), {
+    form.transform((data) => ({
+        ...data,
+        brand_id: props.currentBrandId,
+        store_id: props.currentStoreId,
+    })).post(route('settings.update'), {
         preserveScroll: true,
         forceFormData: true,
         onSuccess: () => {
@@ -115,9 +121,11 @@ const submit = () => {
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
                 
-                <BrandSelector 
-                    :brands="brands" 
-                    :currentBrandId="currentBrandId" 
+                <ContextSelector 
+                    :brands="brands"
+                    :stores="stores"
+                    :currentBrandId="currentBrandId"
+                    :currentStoreId="currentStoreId"
                 />
 
                 <form @submit.prevent="submit" class="space-y-6">

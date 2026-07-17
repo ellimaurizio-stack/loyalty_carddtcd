@@ -10,7 +10,12 @@ class SettingsController extends Controller
     public function index(\App\Models\Store $store)
     {
         $program = LoyaltyProgram::withoutGlobalScopes()
+            ->where('store_id', $store->id)
+            ->where('is_active', true)
+            ->first() 
+            ?? LoyaltyProgram::withoutGlobalScopes()
             ->where('brand_id', $store->brand_id)
+            ->whereNull('store_id')
             ->where('is_active', true)
             ->first();
 

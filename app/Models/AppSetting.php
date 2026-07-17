@@ -10,8 +10,19 @@ class AppSetting extends Model
 {
     use HasFactory, BelongsToTenant;
 
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
+    }
+
     protected $fillable = [
         'brand_id',
+        'store_id',
         'bg_color',
         'header_color',
         'header_text',

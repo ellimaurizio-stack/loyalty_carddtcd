@@ -27,6 +27,8 @@ Route::prefix('/{store:slug}')->middleware('auth:sanctum')->group(function () {
     Route::get('/settings', [App\Http\Controllers\Api\SettingsController::class, 'index']);
 
     Route::get('/app-settings', function (\App\Models\Store $store) {
-        return \App\Models\AppSetting::withoutGlobalScopes()->where('brand_id', $store->brand_id)->first() ?? new \App\Models\AppSetting();
+        return \App\Models\AppSetting::withoutGlobalScopes()->where('store_id', $store->id)->first() 
+            ?? \App\Models\AppSetting::withoutGlobalScopes()->where('brand_id', $store->brand_id)->whereNull('store_id')->first() 
+            ?? new \App\Models\AppSetting();
     });
 });

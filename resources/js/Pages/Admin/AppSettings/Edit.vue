@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { useForm, Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import BrandSelector from '@/Components/BrandSelector.vue';
+import ContextSelector from '@/Components/ContextSelector.vue';
 
 const props = defineProps({
     settings: {
@@ -10,25 +10,51 @@ const props = defineProps({
         required: true,
     },
     brands: Array,
+    stores: Array,
     currentBrandId: [Number, String],
+    currentStoreId: [Number, String],
 });
 
 const form = useForm({
-    bg_color: props.settings.bg_color || '#FFFFFF',
+    bg_color: props.settings.bg_color || '#ffffff',
     header_color: props.settings.header_color || '#3F51B5',
     header_text: props.settings.header_text || 'Cassa Rapida',
-    header_text_color: props.settings.header_text_color || '#FFFFFF',
+    header_text_color: props.settings.header_text_color || '#ffffff',
     pay_btn_color: props.settings.pay_btn_color || '#4CAF50',
     pay_btn_text: props.settings.pay_btn_text || 'Paga con NFC',
-    pay_btn_text_color: props.settings.pay_btn_text_color || '#FFFFFF',
+    pay_btn_text_color: props.settings.pay_btn_text_color || '#ffffff',
     cart_icon_color: props.settings.cart_icon_color || '#42A5F5',
     logo: null,
     background_image: null,
 });
 
+const logoPreview = ref(props.settings.logo_path ? `/storage/${props.settings.logo_path}` : null);
+const bgPreview = ref(props.settings.background_image_path ? `/storage/${props.settings.background_image_path}` : null);
+
+const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        form.logo = file;
+        logoPreview.value = URL.createObjectURL(file);
+    }
+};
+
+const handleBgChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        form.background_image = file;
+        bgPreview.value = URL.createObjectURL(file);
+    }
+};
+
 const submit = () => {
-    form.post(route('app-settings.update'), {
+    form.transform((data) => ({
+        ...data,
+        brand_id: props.currentBrandId,
+        store_id: props.currentStoreId,
+    })).post(route('app-settings.update'), {
         preserveScroll: true,
+        forceFormData: true,
     });
 };
 </script>
@@ -44,9 +70,11 @@ const submit = () => {
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-                <BrandSelector 
-                    :brands="brands" 
-                    :currentBrandId="currentBrandId" 
+                <ContextSelector 
+                    :brands="brands"
+                    :stores="stores"
+                    :currentBrandId="currentBrandId"
+                    :currentStoreId="currentStoreId"
                 />
 
                 <div v-if="$page.props.flash.success" class="mb-4 font-medium text-sm text-green-600 bg-green-100 p-4 rounded-md">

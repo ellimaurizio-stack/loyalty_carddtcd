@@ -12,8 +12,19 @@ class PwaSetting extends Model
 
     use HasFactory;
 
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
+    }
+
     protected $fillable = [
         'brand_id',
+        'store_id',
         'app_name',
         'primary_color',
         'background_color',

@@ -10,25 +10,47 @@ use App\Models\Brand;
 
 class AppSettingController extends Controller
 {
-    private function resolveBrandId(Request $request)
+    private function resolveContext(Request $request)
     {
         $user = auth()->user();
-        if ($user->role === 'brand_manager') {
-            return $user->brand_id;
+        
+        if ($user->role === 'store_manager') {
+            return [
+                'brand_id' => $user->brand_id,
+                'store_id' => $user->store_id,
+            ];
         }
-        $brandId = $request->query('brand_id') ?? $request->input('brand_id');
-        if (!$brandId) {
+
+        $brandId = $user->role === 'brand_manager' ? $user->brand_id : ($request->query('brand_id') ?? $request->input('brand_id'));
+        if (!$brandId && $user->role === 'super_admin') {
             $brandId = Brand::first()->id ?? null;
         }
-        return $brandId;
+
+        $storeId = $request->query('store_id') ?? $request->input('store_id');
+
+        return [
+            'brand_id' => $brandId,
+            'store_id' => $storeId,
+        ];
     }
 
     public function edit(Request $request)
     {
-        $brandId = $this->resolveBrandId($request);
+        $context = $this->resolveContext($request);
+        $brandId = $context['brand_id'];
+        $storeId = $context['store_id'];
 
-        $settings = AppSetting::withoutGlobalScopes()->firstOrCreate(
-            ['brand_id' => $brandId],
+        // Get the specific setting (store level) or default (brand level)
+        $query = AppSetting::withoutGlobalScopes()->where('brand_id', $brandId);
+        
+        if ($storeId) {
+            $query->where('store_id', $storeId);
+        } else {
+            $query->whereNull('store_id');
+        }
+
+        $settings = $query->firstOrCreate(
+            ['brand_id' => $brandId, 'store_id' => $storeId],
             [
                 'bg_color' => '#FFFFFF',
                 'header_color' => '#3F51B5',
@@ -42,17 +64,22 @@ class AppSettingController extends Controller
         );
 
         $brands = auth()->user()->role === 'super_admin' ? Brand::all(['id', 'name']) : [];
+        $stores = $brandId ? \App\Models\Store::where('brand_id', $brandId)->get(['id', 'name']) : [];
 
         return Inertia::render('Admin/AppSettings/Edit', [
             'settings' => $settings,
             'brands' => $brands,
+            'stores' => $stores,
             'currentBrandId' => $brandId,
+            'currentStoreId' => $storeId,
         ]);
     }
 
     public function update(Request $request)
     {
-        $brandId = $this->resolveBrandId($request);
+        $context = $this->resolveContext($request);
+        $brandId = $context['brand_id'];
+        $storeId = $context['store_id'];
 
         $validated = $request->validate([
             'bg_color' => 'required|string',
@@ -67,7 +94,14 @@ class AppSettingController extends Controller
             'background_image' => 'nullable|image|max:4096',
         ]);
 
-        $settings = AppSetting::withoutGlobalScopes()->firstOrCreate(['brand_id' => $brandId]);
+        $query = AppSetting::withoutGlobalScopes()->where('brand_id', $brandId);
+        if ($storeId) {
+            $query->where('store_id', $storeId);
+        } else {
+            $query->whereNull('store_id');
+        }
+
+        $settings = $query->firstOrCreate(['brand_id' => $brandId, 'store_id' => $storeId]);
 
         $settings->fill([
             'bg_color' => $validated['bg_color'],

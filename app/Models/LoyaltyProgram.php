@@ -9,8 +9,19 @@ class LoyaltyProgram extends Model
 {
     use BelongsToTenant;
 
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
+    }
+
     protected $fillable = [
         'brand_id',
+        'store_id',
         'name',
         'purchases_threshold',
         'is_active',
