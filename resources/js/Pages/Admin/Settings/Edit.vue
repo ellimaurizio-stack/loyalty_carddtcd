@@ -1,10 +1,13 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import BrandSelector from '@/Components/BrandSelector.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({
     program: Object,
+    brands: Array,
+    currentBrandId: [Number, String],
 });
 
 const form = useForm({
@@ -110,7 +113,13 @@ const submit = () => {
         </template>
 
         <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                
+                <BrandSelector 
+                    :brands="brands" 
+                    :currentBrandId="currentBrandId" 
+                />
+
                 <form @submit.prevent="submit" class="space-y-6">
                     
                     <!-- Dynamic Form Builder Section -->

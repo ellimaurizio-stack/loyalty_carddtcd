@@ -3,36 +3,72 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AppSetting;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\AppSetting;
+use App\Models\Brand;
 
 class AppSettingController extends Controller
 {
-    public function edit()
+    private function resolveBrandId(Request $request)
     {
-        $settings = AppSetting::first() ?? new AppSetting();
+        $user = auth()->user();
+        if ($user->role === 'brand_manager') {
+            return $user->brand_id;
+        }
+        $brandId = $request->query('brand_id') ?? $request->input('brand_id');
+        if (!$brandId) {
+            $brandId = Brand::first()->id ?? null;
+        }
+        return $brandId;
+    }
+
+    public function edit(Request $request)
+    {
+        $brandId = $this->resolveBrandId($request);
+
+        $settings = AppSetting::withoutGlobalScopes()->firstOrCreate(
+            ['brand_id' => $brandId],
+            [
+                'bg_color' => '#FFFFFF',
+                'header_color' => '#3F51B5',
+                'header_text' => 'Cassa Rapida',
+                'header_text_color' => '#FFFFFF',
+                'pay_btn_color' => '#4CAF50',
+                'pay_btn_text' => 'Paga con NFC',
+                'pay_btn_text_color' => '#FFFFFF',
+                'cart_icon_color' => '#42A5F5',
+            ]
+        );
+
+        $brands = auth()->user()->role === 'super_admin' ? Brand::all(['id', 'name']) : [];
+
         return Inertia::render('Admin/AppSettings/Edit', [
-            'settings' => $settings
+            'settings' => $settings,
+            'brands' => $brands,
+            'currentBrandId' => $brandId,
         ]);
     }
 
     public function update(Request $request)
     {
+        $brandId = $this->resolveBrandId($request);
+
         $validated = $request->validate([
             'bg_color' => 'required|string',
             'header_color' => 'required|string',
-            'header_text' => 'required|string',
+            'header_text' => 'required|string|max:255',
             'header_text_color' => 'required|string',
             'pay_btn_color' => 'required|string',
-            'pay_btn_text' => 'required|string',
+            'pay_btn_text' => 'required|string|max:255',
             'pay_btn_text_color' => 'required|string',
             'cart_icon_color' => 'required|string',
             'logo' => 'nullable|image|max:2048',
             'background_image' => 'nullable|image|max:4096',
         ]);
 
-        $settings = AppSetting::first() ?? new AppSetting();
+        $settings = AppSetting::withoutGlobalScopes()->firstOrCreate(['brand_id' => $brandId]);
+
         $settings->fill([
             'bg_color' => $validated['bg_color'],
             'header_color' => $validated['header_color'],

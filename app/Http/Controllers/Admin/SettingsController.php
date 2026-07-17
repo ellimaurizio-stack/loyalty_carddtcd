@@ -5,15 +5,31 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\LoyaltyProgram;
+use App\Models\Brand;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
-    public function edit()
+    private function resolveBrandId(Request $request)
     {
-        $program = LoyaltyProgram::with('disclaimers')->firstOrCreate(
-            ['is_active' => true],
+        $user = auth()->user();
+        if ($user->role === 'brand_manager') {
+            return $user->brand_id;
+        }
+        $brandId = $request->query('brand_id') ?? $request->input('brand_id');
+        if (!$brandId) {
+            $brandId = Brand::first()->id ?? null;
+        }
+        return $brandId;
+    }
+
+    public function edit(Request $request)
+    {
+        $brandId = $this->resolveBrandId($request);
+
+        $program = LoyaltyProgram::withoutGlobalScopes()->with('disclaimers')->firstOrCreate(
+            ['brand_id' => $brandId, 'is_active' => true],
             [
                 'name' => 'Default Program',
                 'purchases_threshold' => 2,
@@ -29,14 +45,19 @@ class SettingsController extends Controller
             ]
         );
 
+        $brands = auth()->user()->role === 'super_admin' ? Brand::all(['id', 'name']) : [];
+
         return Inertia::render('Admin/Settings/Edit', [
-            'program' => $program
+            'program' => $program,
+            'brands' => $brands,
+            'currentBrandId' => $brandId,
         ]);
     }
 
     public function update(Request $request)
     {
-        $program = LoyaltyProgram::firstOrFail();
+        $brandId = $this->resolveBrandId($request);
+        $program = LoyaltyProgram::withoutGlobalScopes()->where('brand_id', $brandId)->firstOrFail();
 
         // form_fields is a JSON string from FormData
         $formFields = json_decode($request->input('form_fields', '[]'), true) ?? [];

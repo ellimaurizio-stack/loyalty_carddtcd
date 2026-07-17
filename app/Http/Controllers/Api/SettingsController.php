@@ -7,9 +7,12 @@ use App\Models\LoyaltyProgram;
 
 class SettingsController extends Controller
 {
-    public function index()
+    public function index(\App\Models\Store $store)
     {
-        $program = LoyaltyProgram::where('is_active', true)->first();
+        $program = LoyaltyProgram::withoutGlobalScopes()
+            ->where('brand_id', $store->brand_id)
+            ->where('is_active', true)
+            ->first();
 
         if (!$program) {
             return response()->json([

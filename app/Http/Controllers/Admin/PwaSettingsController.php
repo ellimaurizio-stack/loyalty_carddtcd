@@ -6,31 +6,56 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\PwaSetting;
+use App\Models\Brand;
 use Illuminate\Support\Facades\Storage;
 
 class PwaSettingsController extends Controller
 {
-    public function edit()
+    private function resolveBrandId(Request $request)
     {
-        $settings = PwaSetting::firstOrCreate([], [
-            'app_name' => 'Loyalty App',
-            'primary_color' => '#4f46e5',
-            'background_color' => '#f3f4f6',
-            'text_color' => '#111827',
-            'registration_fields' => [
-                'name' => ['enabled' => true, 'required' => true],
-                'phone' => ['enabled' => false, 'required' => false],
-            ],
-            'privacy_policy' => 'Accetto i termini e le condizioni d\'uso.',
-        ]);
+        $user = auth()->user();
+        if ($user->role === 'brand_manager') {
+            return $user->brand_id;
+        }
+        $brandId = $request->query('brand_id') ?? $request->input('brand_id');
+        if (!$brandId) {
+            $brandId = Brand::first()->id ?? null;
+        }
+        return $brandId;
+    }
+
+    public function edit(Request $request)
+    {
+        $brandId = $this->resolveBrandId($request);
+
+        $settings = PwaSetting::withoutGlobalScopes()->firstOrCreate(
+            ['brand_id' => $brandId],
+            [
+                'app_name' => 'Loyalty App',
+                'primary_color' => '#4f46e5',
+                'background_color' => '#f3f4f6',
+                'text_color' => '#111827',
+                'registration_fields' => [
+                    'name' => ['enabled' => true, 'required' => true],
+                    'phone' => ['enabled' => false, 'required' => false],
+                ],
+                'privacy_policy' => 'Accetto i termini e le condizioni d\'uso.',
+            ]
+        );
+
+        $brands = auth()->user()->role === 'super_admin' ? Brand::all(['id', 'name']) : [];
 
         return Inertia::render('Admin/PWA/Editor', [
             'settings' => $settings,
+            'brands' => $brands,
+            'currentBrandId' => $brandId,
         ]);
     }
 
     public function update(Request $request)
     {
+        $brandId = $this->resolveBrandId($request);
+
         $validated = $request->validate([
             'app_name' => 'required|string|max:255',
             'primary_color' => 'required|string',
@@ -42,7 +67,7 @@ class PwaSettingsController extends Controller
             'background_image' => 'nullable|image|max:4096',
         ]);
 
-        $settings = PwaSetting::first();
+        $settings = PwaSetting::withoutGlobalScopes()->firstOrCreate(['brand_id' => $brandId]);
 
         if ($request->hasFile('logo')) {
             if ($settings->logo_path) {

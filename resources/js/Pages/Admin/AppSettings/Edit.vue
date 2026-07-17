@@ -1,12 +1,16 @@
 <script setup>
+import { ref } from 'vue';
+import { useForm, Head } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import BrandSelector from '@/Components/BrandSelector.vue';
 
 const props = defineProps({
     settings: {
         type: Object,
         required: true,
     },
+    brands: Array,
+    currentBrandId: [Number, String],
 });
 
 const form = useForm({
@@ -30,15 +34,21 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Impostazioni App POS" />
+    <Head title="App Cassa Settings" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Layout App POS (Cassa Rapida)</h2>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">App Cassa Settings</h2>
         </template>
 
         <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+                <BrandSelector 
+                    :brands="brands" 
+                    :currentBrandId="currentBrandId" 
+                />
+
                 <div v-if="$page.props.flash.success" class="mb-4 font-medium text-sm text-green-600 bg-green-100 p-4 rounded-md">
                     {{ $page.props.flash.success }}
                 </div>

@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToTenant;
 
 class AppSetting extends Model
 {
+    use HasFactory, BelongsToTenant;
+
     protected $fillable = [
+        'brand_id',
         'bg_color',
         'header_color',
         'header_text',

@@ -1,13 +1,17 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import BrandSelector from '@/Components/BrandSelector.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
+import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
+import TextInput from '@/Components/TextInput.vue';
 
 const props = defineProps({
     program: Object,
     customers: Array,
+    brands: Array,
+    currentBrandId: [Number, String],
 });
 
 const form = useForm({
@@ -34,6 +38,11 @@ const updateProgram = () => {
 
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
+                <BrandSelector 
+                    :brands="brands" 
+                    :currentBrandId="currentBrandId" 
+                />
+
                 <!-- Program Settings -->
                 <div class="bg-white p-4 shadow sm:rounded-lg sm:p-8 dark:bg-gray-800">
                     <section class="max-w-xl">
