@@ -28,6 +28,9 @@ class PwaSettingsController extends Controller
         }
 
         $storeId = $request->query('store_id') ?? $request->input('store_id');
+        if ($storeId === 'null') {
+            $storeId = null;
+        }
 
         return [
             'brand_id' => $brandId,
