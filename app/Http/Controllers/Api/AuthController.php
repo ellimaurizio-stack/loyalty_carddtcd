@@ -26,7 +26,8 @@ class AuthController extends Controller
 
         // We require users logging into the POS app to have a store_id assigned
         // so that the app knows which store to operate on.
-        if (! $user->store_id && $user->role !== 'super_admin') {
+        // If they are a brand_manager, they can login and default to their first store.
+        if (! $user->store_id && ! in_array($user->role, ['super_admin', 'brand_manager'])) {
             return response()->json([
                 'error' => 'Nessun negozio assegnato a questo utente.'
             ], 403);
@@ -35,6 +36,15 @@ class AuthController extends Controller
         $storeSlug = 'default-store';
         if ($user->store) {
             $storeSlug = $user->store->slug;
+        } elseif ($user->role === 'brand_manager') {
+            $firstStore = \App\Models\Store::where('brand_id', $user->brand_id)->first();
+            if ($firstStore) {
+                $storeSlug = $firstStore->slug;
+            } else {
+                return response()->json([
+                    'error' => 'Nessun negozio configurato per questo brand.'
+                ], 403);
+            }
         } elseif ($user->role === 'super_admin') {
             // Give super_admin the first store for testing/default
             $storeSlug = \App\Models\Store::first()->slug ?? 'default-store';
