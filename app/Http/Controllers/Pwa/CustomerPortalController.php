@@ -11,14 +11,28 @@ use App\Models\Customer;
 use App\Models\PwaSetting;
 use App\Models\PromotionalRule;
 use App\Models\Store;
+use App\Models\LoyaltyProgram;
+use App\Models\Disclaimer;
 
 class CustomerPortalController extends Controller
 {
+    private function getPwaSettings(Store $store)
+    {
+        return PwaSetting::withoutGlobalScopes()->where('store_id', $store->id)->first() 
+            ?? PwaSetting::withoutGlobalScopes()->where('brand_id', $store->brand_id)->whereNull('store_id')->first();
+    }
+
+    private function getLoyaltyProgram(Store $store)
+    {
+        return LoyaltyProgram::withoutGlobalScopes()->where('store_id', $store->id)->where('is_active', true)->first() 
+            ?? LoyaltyProgram::withoutGlobalScopes()->where('brand_id', $store->brand_id)->whereNull('store_id')->where('is_active', true)->first();
+    }
+
     public function showLogin(Store $store)
     {
         return inertia('PWA/Auth/Login', [
             'store' => $store,
-            'pwaSettings' => PwaSetting::where('brand_id', $store->brand_id)->first(),
+            'pwaSettings' => $this->getPwaSettings($store),
         ]);
     }
 
@@ -43,22 +57,23 @@ class CustomerPortalController extends Controller
 
     public function showRegister(Store $store)
     {
-        // Load loyalty program configuration for this brand
-        $loyaltyProgram = LoyaltyProgram::where('brand_id', $store->brand_id)->first();
-        // Disclaimers for this brand
-        $disclaimers = Disclaimer::where('brand_id', $store->brand_id)->where('is_active', true)->get();
+        // Load loyalty program configuration for this store/brand
+        $loyaltyProgram = $this->getLoyaltyProgram($store);
+        
+        // Disclaimers are tied to the loyalty program
+        $disclaimers = $loyaltyProgram ? $loyaltyProgram->disclaimers : [];
 
         return inertia('PWA/Auth/Register', [
             'store' => $store,
             'loyaltyProgram' => $loyaltyProgram,
             'disclaimers' => $disclaimers,
-            'pwaSettings' => PwaSetting::where('brand_id', $store->brand_id)->first(),
+            'pwaSettings' => $this->getPwaSettings($store),
         ]);
     }
 
     public function register(Request $request, Store $store)
     {
-        $program = \App\Models\LoyaltyProgram::where('brand_id', $store->brand_id)->with('disclaimers')->first();
+        $program = $this->getLoyaltyProgram($store);
         $formFields = $program ? ($program->form_fields ?? []) : [];
         $disclaimers = $program ? ($program->disclaimers ?? []) : [];
 
@@ -190,8 +205,8 @@ class CustomerPortalController extends Controller
     {
         $customer = Auth::guard('customer')->user();
         
-        $pwaSettings = PwaSetting::where('brand_id', $store->brand_id)->first();
-        $loyaltyProgram = LoyaltyProgram::where('brand_id', $store->brand_id)->first();
+        $pwaSettings = $this->getPwaSettings($store);
+        $loyaltyProgram = $this->getLoyaltyProgram($store);
         $rewards = \App\Models\PromotionalRule::where('brand_id', $store->brand_id)->where('is_active', true)->get();
         
         // Pass the loyalty values safely
@@ -220,3 +235,4 @@ class CustomerPortalController extends Controller
         return redirect()->route('pwa.login', ['store' => $store->slug]);
     }
 }
+
