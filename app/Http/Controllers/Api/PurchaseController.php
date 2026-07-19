@@ -21,7 +21,8 @@ class PurchaseController extends Controller
         ]);
 
         $customer = Customer::where('card_identifier', $validated['card_identifier'])->first();
-        $program = LoyaltyProgram::where('brand_id', $store->brand_id)->where('is_active', true)->first();
+        $program = LoyaltyProgram::withoutGlobalScopes()->where('store_id', $store->id)->where('is_active', true)->first()
+            ?? LoyaltyProgram::withoutGlobalScopes()->where('brand_id', $store->brand_id)->whereNull('store_id')->where('is_active', true)->first();
         
         $originalAmount = (float) $validated['amount'];
         $finalAmount = $originalAmount;
@@ -229,7 +230,8 @@ class PurchaseController extends Controller
         ]);
 
         $purchasesCount = $customer->purchases()->count();
-        $program = LoyaltyProgram::where('brand_id', $store->brand_id)->where('is_active', true)->first();
+        $program = LoyaltyProgram::withoutGlobalScopes()->where('store_id', $store->id)->where('is_active', true)->first()
+            ?? LoyaltyProgram::withoutGlobalScopes()->where('brand_id', $store->brand_id)->whereNull('store_id')->where('is_active', true)->first();
 
         $promptLoyaltySignup = false;
         $unlockedRewards = [];
