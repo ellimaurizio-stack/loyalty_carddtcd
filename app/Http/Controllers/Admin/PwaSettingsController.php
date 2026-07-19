@@ -22,13 +22,13 @@ class PwaSettingsController extends Controller
             ];
         }
 
-        $brandId = $user->role === 'brand_manager' ? $user->brand_id : ($request->query('brand_id') ?? $request->input('brand_id'));
+        $brandId = $user->role === 'brand_manager' ? $user->brand_id : $request->input('brand_id');
         if (!$brandId && $user->role === 'super_admin') {
             $brandId = Brand::first()->id ?? null;
         }
 
-        $storeId = $request->query('store_id') ?? $request->input('store_id');
-        if ($storeId === 'null') {
+        $storeId = $request->input('store_id');
+        if ($storeId === 'null' || $storeId === '') {
             $storeId = null;
         }
 
