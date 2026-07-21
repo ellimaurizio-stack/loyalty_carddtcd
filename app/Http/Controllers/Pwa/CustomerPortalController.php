@@ -55,7 +55,7 @@ class CustomerPortalController extends Controller
         ]);
     }
 
-    public function showRegister(Store $store)
+    public function showRegister(Store $store, Request $request)
     {
         // Load loyalty program configuration for this store/brand
         $loyaltyProgram = $this->getLoyaltyProgram($store);
@@ -66,8 +66,10 @@ class CustomerPortalController extends Controller
         return inertia('PWA/Auth/Register', [
             'store' => $store,
             'loyaltyProgram' => $loyaltyProgram,
+            'formFields' => $loyaltyProgram ? ($loyaltyProgram->form_fields ?? []) : [],
             'disclaimers' => $disclaimers,
             'pwaSettings' => $this->getPwaSettings($store),
+            'card_identifier' => $request->query('card_identifier'),
         ]);
     }
 
