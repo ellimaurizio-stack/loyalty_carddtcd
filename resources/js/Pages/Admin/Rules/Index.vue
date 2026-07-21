@@ -4,12 +4,17 @@ import { Head, useForm, router } from '@inertiajs/vue3';
 import TextInput from '@/Components/TextInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import ContextSelector from '@/Components/ContextSelector.vue';
 import { watch, ref, computed, onMounted } from 'vue';
 
 const props = defineProps({
     rules: Array,
     program: Object,
     products: Array,
+    brands: Array,
+    stores: Array,
+    currentBrandId: [Number, String],
+    currentStoreId: [Number, String],
 });
 
 const editingRuleId = ref(null);
@@ -118,15 +123,21 @@ watch(() => form.type, (newType) => {
 });
 
 const submit = () => {
+    const submitData = form.transform((data) => ({
+        ...data,
+        brand_id: props.currentBrandId,
+        store_id: props.currentStoreId
+    }));
+
     if (editingRuleId.value) {
-        form.put(route('promotional-rules.update', editingRuleId.value), {
+        submitData.put(route('promotional-rules.update', editingRuleId.value), {
             preserveScroll: true,
             onSuccess: () => {
                 cancelEdit();
             },
         });
     } else {
-        form.post(route('promotional-rules.store'), {
+        submitData.post(route('promotional-rules.store'), {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset('name');
@@ -169,7 +180,9 @@ const toggleRule = (rule) => {
         priority: rule.priority,
         is_stackable: rule.is_stackable,
         conditions: rule.conditions || { trigger_type: 'always' },
-        parameters: rule.parameters || {}
+        parameters: rule.parameters || {},
+        brand_id: props.currentBrandId,
+        store_id: props.currentStoreId
     };
 
     router.put(route('promotional-rules.update', rule.id), data, {
@@ -194,6 +207,14 @@ const deleteRule = (rule) => {
 
         <div class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+                <ContextSelector 
+                    :brands="brands" 
+                    :stores="stores" 
+                    :current-brand-id="currentBrandId"
+                    :current-store-id="currentStoreId"
+                    base-route="promotional-rules.index"
+                />
                 
                 <div v-if="$page.props.flash?.success" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
                     <span class="block sm:inline">{{ $page.props.flash.success }}</span>
