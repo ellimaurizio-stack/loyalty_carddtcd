@@ -191,16 +191,7 @@ class CustomerPortalController extends Controller
         }
 
         Auth::guard('customer')->login($customer);
-        
-        // If it's POS mode, return JSON so the WebView can capture it
-        if ($request->has('pos_mode')) {
-            return response()->json([
-                'status' => 'success',
-                'customer' => $customer
-            ]);
-        }
-        
-        return redirect()->route('pwa.dashboard', ['store' => $store->slug]);
+        return redirect()->route('pwa.dashboard', ['store' => $store->slug])->with('customer', $customer);
     }
 
     public function dashboard(Store $store)
