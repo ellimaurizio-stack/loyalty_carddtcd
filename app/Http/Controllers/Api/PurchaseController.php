@@ -59,7 +59,7 @@ class PurchaseController extends Controller
                     if (!empty($triggerProducts) && !empty($validated['products'])) {
                         $purchasedEans = [];
                         foreach ($validated['products'] as $prod) {
-                            $ean = $prod['ean'] ?? null;
+                            $ean = $prod['ean'] ?? $prod['ean_code'] ?? null;
                             if ($ean) {
                                 $purchasedEans[$ean] = ($purchasedEans[$ean] ?? 0) + ($prod['quantity'] ?? 1);
                             }
@@ -175,7 +175,7 @@ class PurchaseController extends Controller
             \Illuminate\Support\Facades\DB::beginTransaction();
             try {
                 foreach ($validated['products'] as $prodData) {
-                    $ean = $prodData['ean'] ?? null;
+                    $ean = $prodData['ean'] ?? $prodData['ean_code'] ?? null;
                     $qty = $prodData['quantity'] ?? 1;
 
                     if ($ean) {
@@ -273,7 +273,7 @@ class PurchaseController extends Controller
                         // Tally product EANs from payload
                         $purchasedEans = [];
                         foreach ($validated['products'] as $prod) {
-                            $ean = $prod['ean'] ?? null;
+                            $ean = $prod['ean'] ?? $prod['ean_code'] ?? null;
                             $qty = $prod['quantity'] ?? 1;
                             if ($ean) {
                                 $purchasedEans[$ean] = ($purchasedEans[$ean] ?? 0) + $qty;

@@ -52,9 +52,21 @@ class AppSettingController extends Controller
             $query->whereNull('store_id');
         }
 
-        $settings = $query->firstOrCreate(
-            ['brand_id' => $brandId, 'store_id' => $storeId],
-            [
+        $settings = $query->first();
+
+        // Se stiamo guardando uno store e non ha personalizzazioni, proviamo a prendere quelle del brand
+        if (!$settings && $storeId) {
+            $settings = AppSetting::withoutGlobalScopes()
+                ->where('brand_id', $brandId)
+                ->whereNull('store_id')
+                ->first();
+        }
+
+        // Se ancora non c'è nulla, creiamo un modello in memoria con i default
+        if (!$settings) {
+            $settings = new AppSetting([
+                'brand_id' => $brandId,
+                'store_id' => $storeId,
                 'bg_color' => '#FFFFFF',
                 'header_color' => '#3F51B5',
                 'header_text' => 'Cassa Rapida',
@@ -63,8 +75,8 @@ class AppSettingController extends Controller
                 'pay_btn_text' => 'Paga con NFC',
                 'pay_btn_text_color' => '#FFFFFF',
                 'cart_icon_color' => '#42A5F5',
-            ]
-        );
+            ]);
+        }
 
         $brands = auth()->user()->role === 'super_admin' ? Brand::all(['id', 'name']) : [];
         $stores = $brandId ? \App\Models\Store::where('brand_id', $brandId)->get(['id', 'name']) : [];
