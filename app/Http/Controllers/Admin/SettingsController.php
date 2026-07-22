@@ -51,9 +51,23 @@ class SettingsController extends Controller
             $query->whereNull('store_id');
         }
 
-        $program = $query->with('disclaimers')->firstOrCreate(
-            ['brand_id' => $brandId, 'store_id' => $storeId, 'is_active' => true],
-            [
+        $program = $query->with('disclaimers')->first();
+
+        // Se stiamo guardando uno store e non ha personalizzazioni, proviamo a prendere quelle del brand
+        if (!$program && $storeId) {
+            $program = LoyaltyProgram::withoutGlobalScopes()
+                ->with('disclaimers')
+                ->where('brand_id', $brandId)
+                ->whereNull('store_id')
+                ->first();
+        }
+
+        // Se ancora non c'è nulla, creiamo un modello in memoria con i default
+        if (!$program) {
+            $program = new LoyaltyProgram([
+                'brand_id' => $brandId,
+                'store_id' => $storeId,
+                'is_active' => true,
                 'name' => 'Default Program',
                 'purchases_threshold' => 2,
                 'form_fields' => [],
@@ -65,8 +79,9 @@ class SettingsController extends Controller
                     'intro_text' => 'We noticed you shop here often. Join our loyalty program to earn rewards!',
                     'button_text' => 'Send OTP Code'
                 ]
-            ]
-        );
+            ]);
+            $program->setRelation('disclaimers', collect([]));
+        }
 
         $brands = auth()->user()->role === 'super_admin' ? Brand::all(['id', 'name']) : [];
         $stores = $brandId ? \App\Models\Store::where('brand_id', $brandId)->get(['id', 'name']) : [];

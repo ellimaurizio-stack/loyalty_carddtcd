@@ -52,9 +52,21 @@ class PwaSettingsController extends Controller
             $query->whereNull('store_id');
         }
 
-        $settings = $query->firstOrCreate(
-            ['brand_id' => $brandId, 'store_id' => $storeId],
-            [
+        $settings = $query->first();
+
+        // Se stiamo guardando uno store e non ha personalizzazioni, proviamo a prendere quelle del brand
+        if (!$settings && $storeId) {
+            $settings = PwaSetting::withoutGlobalScopes()
+                ->where('brand_id', $brandId)
+                ->whereNull('store_id')
+                ->first();
+        }
+
+        // Se ancora non c'è nulla, creiamo un modello in memoria con i default
+        if (!$settings) {
+            $settings = new PwaSetting([
+                'brand_id' => $brandId,
+                'store_id' => $storeId,
                 'app_name' => 'Fidelity App',
                 'primary_color' => '#3F51B5',
                 'background_color' => '#F3F4F6',
@@ -63,8 +75,8 @@ class PwaSettingsController extends Controller
                 'card_text_color' => '#1F2937',
                 'registration_fields' => ['name', 'email', 'phone'],
                 'privacy_policy' => 'Accetto i termini e le condizioni d\'uso.',
-            ]
-        );
+            ]);
+        }
 
         $brands = auth()->user()->role === 'super_admin' ? Brand::all(['id', 'name']) : [];
         $stores = $brandId ? \App\Models\Store::where('brand_id', $brandId)->get(['id', 'name']) : [];
